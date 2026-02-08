@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "WebSearch",
+      "Bash(npx create-next-app:*)",
+      "Bash(npm init:*)",
+      "Bash(npm install:*)",
+      "Bash(node -e:*)",
+      "Bash(npx prisma generate:*)",
+      "Bash(npx prisma db push:*)",
+      "Bash(npx next build:*)",
+      "Bash(npm run dev:*)",
+      "Bash(curl:*)",
+      "Bash(QUIZ_ID=\"cmle87xa0000052uz184b463j\")",
+      "Bash(python3:*)",
+      "Bash(start:*)",
+      "Bash(where:*)",
+      "Bash(npx --yes playwright --version)",
+      "Bash(npx playwright install:*)",
+      "Bash(node test-flow.mjs:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(taskkill:*)",
+      "Bash(git status:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}

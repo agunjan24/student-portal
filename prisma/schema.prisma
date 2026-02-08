@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Quiz {
+  id          String   @id @default(cuid())
+  subject     String   @default("math")
+  topic       String
+  description String?
+  quizDate    DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  materials     Material[]
+  problems      Problem[]
+  studySessions StudySession[]
+}
+
+model Material {
+  id              String   @id @default(cuid())
+  filename        String
+  filepath        String
+  mimeType        String
+  fileSize        Int
+  status          String   @default("pending") // pending | processing | completed | failed
+  extractedText   String?
+  extractedTopics String?  // JSON string
+  errorMessage    String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  quizId String?
+  quiz   Quiz?   @relation(fields: [quizId], references: [id], onDelete: SetNull)
+}
+
+model Problem {
+  id           String @id @default(cuid())
+  questionText String
+  solutionText String
+  difficulty   String // easy | medium | hard
+  topic        String
+  createdAt    DateTime @default(now())
+
+  quizId    String
+  quiz      Quiz              @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  responses ProblemResponse[]
+}
+
+model StudySession {
+  id             String    @id @default(cuid())
+  status         String    @default("active") // active | completed
+  difficulty     String // easy | medium | hard
+  totalProblems  Int
+  correctCount   Int       @default(0)
+  incorrectCount Int       @default(0)
+  startedAt      DateTime  @default(now())
+  completedAt    DateTime?
+
+  quizId    String
+  quiz      Quiz              @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  responses ProblemResponse[]
+}
+
+model ProblemResponse {
+  id           String   @id @default(cuid())
+  isCorrect    Boolean
+  timeSpentSecs Int?
+  createdAt    DateTime @default(now())
+
+  problemId String
+  problem   Problem      @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  sessionId String
+  session   StudySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}

@@ -1,0 +1,46 @@
+import { anthropic } from "./client";
+import { EXTRACT_CONTENT_PROMPT } from "./prompts";
+import { readFileAsBase64 } from "../upload";
+import { stripCodeFences } from "./utils";
+import type { ExtractionResult } from "@/types";
+
+type ImageMediaType = "image/jpeg" | "image/png" | "image/gif" | "image/webp";
+
+export async function extractContent(
+  filepath: string,
+  mimeType: string
+): Promise<ExtractionResult> {
+  const base64 = await readFileAsBase64(filepath);
+
+  const message = await anthropic.messages.create({
+    model: "claude-sonnet-4-5-20250929",
+    max_tokens: 4096,
+    messages: [
+      {
+        role: "user",
+        content: [
+          {
+            type: "image",
+            source: {
+              type: "base64",
+              media_type: mimeType as ImageMediaType,
+              data: base64,
+            },
+          },
+          {
+            type: "text",
+            text: EXTRACT_CONTENT_PROMPT,
+          },
+        ],
+      },
+    ],
+  });
+
+  const textBlock = message.content.find((b) => b.type === "text");
+  if (!textBlock || textBlock.type !== "text") {
+    throw new Error("No text response from AI");
+  }
+
+  const result = JSON.parse(stripCodeFences(textBlock.text)) as ExtractionResult;
+  return result;
+}
