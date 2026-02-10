@@ -5,22 +5,23 @@ import type { Difficulty } from "@/types";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { quizId, difficulty, count } = body as {
-    quizId: string;
+  const { chapterId, difficulty, count } = body as {
+    chapterId: string;
     difficulty: Difficulty;
     count: number;
   };
 
-  if (!quizId || !difficulty || !count) {
+  if (!chapterId || !difficulty || !count) {
     return NextResponse.json(
-      { error: "quizId, difficulty, and count are required" },
+      { error: "chapterId, difficulty, and count are required" },
       { status: 400 }
     );
   }
 
-  const quiz = await prisma.quiz.findUnique({
-    where: { id: quizId },
+  const chapter = await prisma.chapter.findUnique({
+    where: { id: chapterId },
     include: {
+      course: true,
       materials: {
         where: { status: "completed" },
         select: { extractedText: true },
@@ -28,22 +29,29 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  if (!quiz) {
-    return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
+  if (!chapter) {
+    return NextResponse.json({ error: "Chapter not found" }, { status: 404 });
   }
 
   // Combine all extracted material text as context
-  const materialContext = quiz.materials
+  const materialContext = chapter.materials
     .map((m) => m.extractedText)
     .filter(Boolean)
     .join("\n\n---\n\n");
 
   try {
     const generated = await generateProblems(
-      quiz.topic,
+      chapter.title,
       difficulty,
       count,
-      materialContext
+      materialContext,
+      {
+        grade: chapter.course.grade,
+        level: chapter.course.level,
+        courseName: chapter.course.courseName,
+        chapterTitle: chapter.title,
+        standardIds: chapter.standardIds ? JSON.parse(chapter.standardIds) : undefined,
+      }
     );
 
     // Save to database
@@ -55,7 +63,8 @@ export async function POST(request: NextRequest) {
             solutionText: p.solutionText,
             difficulty: p.difficulty,
             topic: p.topic,
-            quizId,
+            standardId: p.standardId || null,
+            chapterId,
           },
         })
       )

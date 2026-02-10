@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { FileImage, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { MATERIAL_STATUS_COLORS } from "@/lib/constants";
+import { MATERIAL_STATUS_COLORS, MATERIAL_TYPE_LABELS } from "@/lib/constants";
 
 interface MaterialCardProps {
   material: {
@@ -10,8 +10,9 @@ interface MaterialCardProps {
     mimeType: string;
     fileSize: number;
     status: string;
+    materialType: string;
     createdAt: string;
-    quiz?: { id: string; topic: string } | null;
+    chapter?: { id: string; title: string; course: { id: string; courseName: string } } | null;
   };
 }
 
@@ -40,10 +41,17 @@ export function MaterialCard({ material }: MaterialCardProps) {
               {material.status}
             </span>
           </div>
-          <p className="text-xs text-gray-500">
+          <div className="flex items-center gap-2">
+            <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">
+              {MATERIAL_TYPE_LABELS[material.materialType] || material.materialType}
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
             {(material.fileSize / 1024).toFixed(1)} KB
-            {material.quiz && (
-              <span> &middot; {material.quiz.topic}</span>
+            {material.chapter && (
+              <span>
+                {" "}&middot; {material.chapter.course.courseName} — {material.chapter.title}
+              </span>
             )}
           </p>
         </div>

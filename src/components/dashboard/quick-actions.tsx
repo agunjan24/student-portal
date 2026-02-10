@@ -2,22 +2,22 @@ import Link from "next/link";
 import { Plus, Upload, Brain } from "lucide-react";
 
 interface QuickActionsProps {
-  hasQuizzes: boolean;
+  hasCourses: boolean;
 }
 
-export function QuickActions({ hasQuizzes }: QuickActionsProps) {
+export function QuickActions({ hasCourses }: QuickActionsProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
       <Link
-        href="/quizzes/new"
+        href="/courses/new"
         className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
       >
         <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0">
           <Plus className="w-5 h-5 text-white" />
         </div>
         <div>
-          <p className="font-medium text-sm text-blue-900">New Quiz</p>
-          <p className="text-xs text-blue-600">Create a quiz to track</p>
+          <p className="font-medium text-sm text-blue-900">New Course</p>
+          <p className="text-xs text-blue-600">Add a course to track</p>
         </div>
       </Link>
 
@@ -34,9 +34,9 @@ export function QuickActions({ hasQuizzes }: QuickActionsProps) {
         </div>
       </Link>
 
-      {hasQuizzes && (
+      {hasCourses && (
         <Link
-          href="/quizzes"
+          href="/courses"
           className="flex items-center gap-3 p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
         >
           <div className="w-10 h-10 rounded-lg bg-green-600 flex items-center justify-center flex-shrink-0">
@@ -44,7 +44,7 @@ export function QuickActions({ hasQuizzes }: QuickActionsProps) {
           </div>
           <div>
             <p className="font-medium text-sm text-green-900">Study Now</p>
-            <p className="text-xs text-green-600">Practice for a quiz</p>
+            <p className="text-xs text-green-600">Practice for a test</p>
           </div>
         </Link>
       )}

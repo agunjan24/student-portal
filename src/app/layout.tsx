@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Quiz Prep Bot",
-  description: "AI-powered study companion for math quiz preparation",
+  description: "AI-powered study companion for math course preparation with MA Curriculum Framework alignment",
 };
 
 export default function RootLayout({

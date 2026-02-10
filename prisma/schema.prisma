@@ -7,14 +7,30 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Quiz {
-  id          String   @id @default(cuid())
-  subject     String   @default("math")
-  topic       String
-  description String?
-  quizDate    DateTime
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model Course {
+  id         String   @id @default(cuid())
+  grade      Int      @default(10) // 9-12
+  subject    String   @default("Mathematics")
+  level      String   @default("regular") // regular | honors | AP
+  courseName String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  chapters Chapter[]
+}
+
+model Chapter {
+  id            String    @id @default(cuid())
+  title         String
+  chapterNumber Int
+  description   String?
+  testDate      DateTime?
+  standardIds   String?   // JSON string array of standard IDs
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  courseId String
+  course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   materials     Material[]
   problems      Problem[]
@@ -22,32 +38,36 @@ model Quiz {
 }
 
 model Material {
-  id              String   @id @default(cuid())
-  filename        String
-  filepath        String
-  mimeType        String
-  fileSize        Int
-  status          String   @default("pending") // pending | processing | completed | failed
-  extractedText   String?
-  extractedTopics String?  // JSON string
-  errorMessage    String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                  String   @id @default(cuid())
+  filename            String
+  filepath            String
+  mimeType            String
+  fileSize            Int
+  materialType        String   @default("other") // classNotes | quiz | homework | classwork | practiceTest | other
+  status              String   @default("pending") // pending | processing | completed | failed
+  extractedText       String?
+  extractedTopics     String?  // JSON string
+  errorMessage        String?
+  augmentedContent    String?  // JSON string of augmentation result
+  augmentationStatus  String?  // pending | processing | completed | failed
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
-  quizId String?
-  quiz   Quiz?   @relation(fields: [quizId], references: [id], onDelete: SetNull)
+  chapterId String?
+  chapter   Chapter? @relation(fields: [chapterId], references: [id], onDelete: SetNull)
 }
 
 model Problem {
-  id           String @id @default(cuid())
+  id           String   @id @default(cuid())
   questionText String
   solutionText String
   difficulty   String // easy | medium | hard
   topic        String
+  standardId   String?
   createdAt    DateTime @default(now())
 
-  quizId    String
-  quiz      Quiz              @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  chapterId String
+  chapter   Chapter           @relation(fields: [chapterId], references: [id], onDelete: Cascade)
   responses ProblemResponse[]
 }
 
@@ -61,16 +81,16 @@ model StudySession {
   startedAt      DateTime  @default(now())
   completedAt    DateTime?
 
-  quizId    String
-  quiz      Quiz              @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  chapterId String
+  chapter   Chapter           @relation(fields: [chapterId], references: [id], onDelete: Cascade)
   responses ProblemResponse[]
 }
 
 model ProblemResponse {
-  id           String   @id @default(cuid())
-  isCorrect    Boolean
+  id            String   @id @default(cuid())
+  isCorrect     Boolean
   timeSpentSecs Int?
-  createdAt    DateTime @default(now())
+  createdAt     DateTime @default(now())
 
   problemId String
   problem   Problem      @relation(fields: [problemId], references: [id], onDelete: Cascade)

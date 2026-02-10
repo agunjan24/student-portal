@@ -22,7 +22,21 @@
       "Bash(npm uninstall:*)",
       "Bash(taskkill:*)",
       "Bash(git status:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git config:*)",
+      "Bash(gh auth status:*)",
+      "Bash(git remote add:*)",
+      "Bash(git push:*)",
+      "Bash(findstr:*)",
+      "Bash(timeout:*)",
+      "Bash(tasklist:*)",
+      "Bash(del \"C:\\\\Apps\\\\student-portal\\\\node_modules\\\\.prisma\\\\client\\\\query_engine-windows.dll.node\")",
+      "Bash(npm run build:*)",
+      "Bash(git -C C:/apps/student-portal status)",
+      "Bash(git -C C:/apps/student-portal diff --stat)",
+      "Bash(git -C C:/apps/student-portal log --oneline -5)",
+      "Bash(git -C C:/apps/student-portal add prisma/schema.prisma src/ CLAUDE.md PLAN_AugmentWithMACurriculum.md .claude/settings.local.json)"
     ]
   }
 }

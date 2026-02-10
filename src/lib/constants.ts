@@ -1,6 +1,48 @@
 export const DIFFICULTIES = ["easy", "medium", "hard"] as const;
 
-export const SUBJECTS = ["math"] as const;
+export const SUBJECTS = ["Mathematics"] as const;
+
+export const GRADES = [9, 10, 11, 12] as const;
+
+export const COURSE_LEVELS = ["regular", "honors", "AP"] as const;
+
+export const COURSE_LEVEL_LABELS: Record<string, string> = {
+  regular: "Regular",
+  honors: "Honors",
+  AP: "AP",
+};
+
+export const MATERIAL_TYPES = [
+  "classNotes",
+  "quiz",
+  "homework",
+  "classwork",
+  "practiceTest",
+  "other",
+] as const;
+
+export const MATERIAL_TYPE_LABELS: Record<string, string> = {
+  classNotes: "Class Notes",
+  quiz: "Quiz",
+  homework: "Homework",
+  classwork: "Classwork",
+  practiceTest: "Practice Test",
+  other: "Other",
+};
+
+export const COURSE_NAMES = [
+  "Algebra I",
+  "Geometry",
+  "Algebra II",
+  "Precalculus",
+] as const;
+
+export const COURSE_GRADE_MAP: Record<string, number[]> = {
+  "Algebra I": [9, 10],
+  Geometry: [9, 10, 11],
+  "Algebra II": [10, 11],
+  Precalculus: [11, 12],
+};
 
 export const DIFFICULTY_LABELS: Record<string, string> = {
   easy: "Easy",

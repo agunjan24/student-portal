@@ -9,7 +9,7 @@ interface Session {
   correctCount: number;
   incorrectCount: number;
   completedAt: string | null;
-  quiz: { id: string; topic: string };
+  chapter: { id: string; title: string; course: { id: string; courseName: string } };
 }
 
 export function RecentActivity({ sessions }: { sessions: Session[] }) {
@@ -32,12 +32,13 @@ export function RecentActivity({ sessions }: { sessions: Session[] }) {
         return (
           <Link
             key={session.id}
-            href={`/quizzes/${session.quiz.id}`}
+            href={`/courses/${session.chapter.course.id}/chapters/${session.chapter.id}`}
             className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
           >
             <div>
-              <p className="text-sm font-medium">{session.quiz.topic}</p>
+              <p className="text-sm font-medium">{session.chapter.title}</p>
               <p className="text-xs text-gray-400 mt-0.5">
+                {session.chapter.course.courseName} &middot;{" "}
                 {DIFFICULTY_LABELS[session.difficulty] || session.difficulty} &middot;{" "}
                 {session.completedAt
                   ? new Date(session.completedAt).toLocaleDateString()

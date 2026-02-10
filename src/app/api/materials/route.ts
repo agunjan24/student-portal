@@ -4,17 +4,21 @@ import { validateFile, saveFile } from "@/lib/upload";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const quizId = searchParams.get("quizId");
+  const chapterId = searchParams.get("chapterId");
   const status = searchParams.get("status");
 
   const where: Record<string, unknown> = {};
-  if (quizId) where.quizId = quizId;
+  if (chapterId) where.chapterId = chapterId;
   if (status) where.status = status;
 
   const materials = await prisma.material.findMany({
     where,
     orderBy: { createdAt: "desc" },
-    include: { quiz: { select: { id: true, topic: true } } },
+    include: {
+      chapter: {
+        select: { id: true, title: true, course: { select: { id: true, courseName: true } } },
+      },
+    },
   });
 
   return NextResponse.json(materials);
@@ -23,7 +27,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const formData = await request.formData();
   const file = formData.get("file") as File | null;
-  const quizId = formData.get("quizId") as string | null;
+  const chapterId = formData.get("chapterId") as string | null;
+  const materialType = formData.get("materialType") as string | null;
 
   if (!file) {
     return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -41,7 +46,8 @@ export async function POST(request: NextRequest) {
       filepath: "", // Will update after saving
       mimeType: file.type,
       fileSize: file.size,
-      quizId: quizId || null,
+      chapterId: chapterId || null,
+      materialType: materialType || "other",
     },
   });
 

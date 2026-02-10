@@ -9,7 +9,9 @@ export async function GET(
   const session = await prisma.studySession.findUnique({
     where: { id: sessionId },
     include: {
-      quiz: { select: { id: true, topic: true } },
+      chapter: {
+        select: { id: true, title: true, courseId: true, course: { select: { id: true, courseName: true } } },
+      },
       responses: {
         include: { problem: true },
         orderBy: { createdAt: "asc" },

@@ -1,10 +1,11 @@
-import { Target, BookOpen, Brain, GraduationCap } from "lucide-react";
+import { Target, BookOpen, Brain, GraduationCap, Layers } from "lucide-react";
 
 interface ProgressSummaryProps {
   overallAccuracy: number | null;
   sessionCount: number;
   materialCount: number;
   problemCount: number;
+  courseCount: number;
 }
 
 export function ProgressSummary({
@@ -12,11 +13,18 @@ export function ProgressSummary({
   sessionCount,
   materialCount,
   problemCount,
+  courseCount,
 }: ProgressSummaryProps) {
   const stats = [
     {
+      label: "Courses",
+      value: courseCount.toString(),
+      icon: Layers,
+      color: "text-indigo-600 bg-indigo-50",
+    },
+    {
       label: "Accuracy",
-      value: overallAccuracy !== null ? `${overallAccuracy}%` : "—",
+      value: overallAccuracy !== null ? `${overallAccuracy}%` : "\u2014",
       icon: Target,
       color: "text-blue-600 bg-blue-50",
     },
@@ -41,7 +49,7 @@ export function ProgressSummary({
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
       {stats.map((stat) => {
         const Icon = stat.icon;
         return (

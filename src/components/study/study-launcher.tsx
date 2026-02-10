@@ -10,8 +10,9 @@ import { DIFFICULTY_LABELS } from "@/lib/constants";
 import type { Difficulty } from "@/types";
 
 interface StudyLauncherProps {
-  quizId: string;
-  quizTopic: string;
+  chapterId: string;
+  chapterTitle: string;
+  courseId: string;
   problemCount: number;
   materialCount: number;
   recentSessions: {
@@ -24,8 +25,9 @@ interface StudyLauncherProps {
 }
 
 export function StudyLauncher({
-  quizId,
-  quizTopic,
+  chapterId,
+  chapterTitle,
+  courseId,
   problemCount,
   materialCount,
   recentSessions,
@@ -39,11 +41,10 @@ export function StudyLauncher({
   async function handleGenerateAndStart() {
     setGenerating(true);
     try {
-      // Generate problems
       const genRes = await fetch("/api/problems/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ quizId, difficulty, count }),
+        body: JSON.stringify({ chapterId, difficulty, count }),
       });
 
       if (!genRes.ok) {
@@ -54,7 +55,6 @@ export function StudyLauncher({
       const problems = await genRes.json();
       toast.success(`Generated ${problems.length} problems`);
 
-      // Start session
       await startSession(problems.map((p: { id: string }) => p.id));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to generate problems");
@@ -66,12 +66,11 @@ export function StudyLauncher({
   async function handleStartWithExisting() {
     setStarting(true);
     try {
-      // Fetch existing problems for this quiz and difficulty
-      const res = await fetch(`/api/quizzes/${quizId}`);
-      if (!res.ok) throw new Error("Failed to fetch quiz");
-      const quiz = await res.json();
+      const res = await fetch(`/api/courses/${courseId}/chapters/${chapterId}`);
+      if (!res.ok) throw new Error("Failed to fetch chapter");
+      const chapter = await res.json();
 
-      const matchingProblems = quiz.problems
+      const matchingProblems = chapter.problems
         .filter((p: { difficulty: string }) => p.difficulty === difficulty)
         .slice(0, count);
 
@@ -82,7 +81,7 @@ export function StudyLauncher({
       }
 
       await startSession(matchingProblems.map((p: { id: string }) => p.id));
-    } catch (error) {
+    } catch {
       toast.error("Failed to start session");
     } finally {
       setStarting(false);
@@ -93,25 +92,23 @@ export function StudyLauncher({
     const sessionRes = await fetch("/api/sessions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ quizId, difficulty, problemIds }),
+      body: JSON.stringify({ chapterId, difficulty, problemIds }),
     });
 
     if (!sessionRes.ok) throw new Error("Failed to create session");
 
     const session = await sessionRes.json();
-    // Navigate to session with problem IDs in search params
     const params = new URLSearchParams({
       sessionId: session.id,
       problems: problemIds.join(","),
     });
-    router.push(`/study/${quizId}/session?${params}`);
+    router.push(`/study/${chapterId}/session?${params}`);
   }
 
   const isLoading = generating || starting;
 
   return (
     <div className="space-y-6">
-      {/* Configuration */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h2 className="text-lg font-semibold mb-4">Session Settings</h2>
 
@@ -179,7 +176,6 @@ export function StudyLauncher({
         )}
       </div>
 
-      {/* Recent sessions */}
       {recentSessions.length > 0 && (
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h2 className="text-lg font-semibold mb-3">Recent Sessions</h2>

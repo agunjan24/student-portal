@@ -2,13 +2,17 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
 export async function GET() {
-  const [quizzes, materials, sessions, totalProblems] = await Promise.all([
-    prisma.quiz.findMany({
-      orderBy: { quizDate: "asc" },
+  const [courses, materialCount, sessions, totalProblems] = await Promise.all([
+    prisma.course.findMany({
+      orderBy: { createdAt: "desc" },
       include: {
-        _count: {
-          select: { materials: true, problems: true, studySessions: true },
+        chapters: {
+          orderBy: { chapterNumber: "asc" },
+          include: {
+            _count: { select: { materials: true, problems: true, studySessions: true } },
+          },
         },
+        _count: { select: { chapters: true } },
       },
     }),
     prisma.material.count(),
@@ -17,7 +21,9 @@ export async function GET() {
       orderBy: { completedAt: "desc" },
       take: 10,
       include: {
-        quiz: { select: { id: true, topic: true } },
+        chapter: {
+          select: { id: true, title: true, course: { select: { id: true, courseName: true } } },
+        },
       },
     }),
     prisma.problem.count(),
@@ -33,8 +39,9 @@ export async function GET() {
     totalAnswered > 0 ? Math.round((totalCorrect / totalAnswered) * 100) : null;
 
   return NextResponse.json({
-    quizzes,
-    materialCount: materials,
+    courses,
+    courseCount: courses.length,
+    materialCount,
     problemCount: totalProblems,
     sessionCount: totalSessions,
     overallAccuracy,

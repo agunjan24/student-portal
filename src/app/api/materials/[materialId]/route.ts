@@ -9,7 +9,11 @@ export async function GET(
   const { materialId } = await params;
   const material = await prisma.material.findUnique({
     where: { id: materialId },
-    include: { quiz: { select: { id: true, topic: true } } },
+    include: {
+      chapter: {
+        select: { id: true, title: true, courseId: true, course: { select: { id: true, courseName: true } } },
+      },
+    },
   });
 
   if (!material) {

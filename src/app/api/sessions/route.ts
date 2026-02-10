@@ -3,16 +3,18 @@ import { prisma } from "@/lib/db";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const quizId = searchParams.get("quizId");
+  const chapterId = searchParams.get("chapterId");
 
   const where: Record<string, unknown> = {};
-  if (quizId) where.quizId = quizId;
+  if (chapterId) where.chapterId = chapterId;
 
   const sessions = await prisma.studySession.findMany({
     where,
     orderBy: { startedAt: "desc" },
     include: {
-      quiz: { select: { id: true, topic: true } },
+      chapter: {
+        select: { id: true, title: true, course: { select: { id: true, courseName: true } } },
+      },
       _count: { select: { responses: true } },
     },
   });
@@ -22,22 +24,22 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { quizId, difficulty, problemIds } = body as {
-    quizId: string;
+  const { chapterId, difficulty, problemIds } = body as {
+    chapterId: string;
     difficulty: string;
     problemIds: string[];
   };
 
-  if (!quizId || !difficulty || !problemIds?.length) {
+  if (!chapterId || !difficulty || !problemIds?.length) {
     return NextResponse.json(
-      { error: "quizId, difficulty, and problemIds are required" },
+      { error: "chapterId, difficulty, and problemIds are required" },
       { status: 400 }
     );
   }
 
   const session = await prisma.studySession.create({
     data: {
-      quizId,
+      chapterId,
       difficulty,
       totalProblems: problemIds.length,
     },

@@ -4,8 +4,9 @@ import Link from "next/link";
 import { Trophy, Target, RotateCcw, ArrowLeft } from "lucide-react";
 
 interface SessionSummaryProps {
-  quizId: string;
-  quizTopic: string;
+  chapterId: string;
+  chapterTitle: string;
+  courseId: string;
   correct: number;
   incorrect: number;
   total: number;
@@ -13,8 +14,9 @@ interface SessionSummaryProps {
 }
 
 export function SessionSummary({
-  quizId,
-  quizTopic,
+  chapterId,
+  chapterTitle,
+  courseId,
   correct,
   incorrect,
   total,
@@ -64,18 +66,18 @@ export function SessionSummary({
 
       <div className="flex flex-col gap-2">
         <Link
-          href={`/study/${quizId}`}
+          href={`/study/${chapterId}`}
           className="w-full py-2.5 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors inline-flex items-center justify-center gap-2"
         >
           <RotateCcw className="w-4 h-4" />
           Study Again
         </Link>
         <Link
-          href={`/quizzes/${quizId}`}
+          href={`/courses/${courseId}/chapters/${chapterId}`}
           className="w-full py-2.5 px-4 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors inline-flex items-center justify-center gap-2"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Quiz
+          Back to Chapter
         </Link>
       </div>
     </div>

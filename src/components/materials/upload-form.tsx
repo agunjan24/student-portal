@@ -5,21 +5,25 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { FileDropzone } from "@/components/shared/file-dropzone";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
+import { MATERIAL_TYPE_LABELS } from "@/lib/constants";
 
-interface Quiz {
+interface Chapter {
   id: string;
-  topic: string;
+  title: string;
+  chapterNumber: number;
+  courseName: string;
 }
 
 interface UploadFormProps {
-  quizzes: Quiz[];
-  defaultQuizId?: string;
+  chapters: Chapter[];
+  defaultChapterId?: string;
 }
 
-export function UploadForm({ quizzes, defaultQuizId }: UploadFormProps) {
+export function UploadForm({ chapters, defaultChapterId }: UploadFormProps) {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
-  const [quizId, setQuizId] = useState(defaultQuizId ?? "");
+  const [chapterId, setChapterId] = useState(defaultChapterId ?? "");
+  const [materialType, setMaterialType] = useState("other");
   const [uploading, setUploading] = useState(false);
   const [processing, setProcessing] = useState(false);
 
@@ -31,7 +35,8 @@ export function UploadForm({ quizzes, defaultQuizId }: UploadFormProps) {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      if (quizId) formData.append("quizId", quizId);
+      if (chapterId) formData.append("chapterId", chapterId);
+      formData.append("materialType", materialType);
 
       const uploadRes = await fetch("/api/materials", {
         method: "POST",
@@ -84,19 +89,37 @@ export function UploadForm({ quizzes, defaultQuizId }: UploadFormProps) {
       </div>
 
       <div>
-        <label htmlFor="quizId" className="block text-sm font-medium text-gray-700 mb-1">
-          Link to Quiz
+        <label htmlFor="chapterId" className="block text-sm font-medium text-gray-700 mb-1">
+          Link to Chapter
         </label>
         <select
-          id="quizId"
-          value={quizId}
-          onChange={(e) => setQuizId(e.target.value)}
+          id="chapterId"
+          value={chapterId}
+          onChange={(e) => setChapterId(e.target.value)}
           className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
-          <option value="">No quiz selected</option>
-          {quizzes.map((q) => (
-            <option key={q.id} value={q.id}>
-              {q.topic}
+          <option value="">No chapter selected</option>
+          {chapters.map((ch) => (
+            <option key={ch.id} value={ch.id}>
+              {ch.courseName} — Ch {ch.chapterNumber}: {ch.title}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label htmlFor="materialType" className="block text-sm font-medium text-gray-700 mb-1">
+          Material Type
+        </label>
+        <select
+          id="materialType"
+          value={materialType}
+          onChange={(e) => setMaterialType(e.target.value)}
+          className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+          {Object.entries(MATERIAL_TYPE_LABELS).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
             </option>
           ))}
         </select>

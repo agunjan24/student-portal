@@ -8,7 +8,11 @@ import { prisma } from "@/lib/db";
 export default async function MaterialsPage() {
   const materials = await prisma.material.findMany({
     orderBy: { createdAt: "desc" },
-    include: { quiz: { select: { id: true, topic: true } } },
+    include: {
+      chapter: {
+        select: { id: true, title: true, course: { select: { id: true, courseName: true } } },
+      },
+    },
   });
 
   return (
