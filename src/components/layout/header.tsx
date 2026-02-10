@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BookOpen, Home, FileText, Upload, LogOut } from "lucide-react";
+import { BookOpen, Home, FileText, Upload, HelpCircle, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: Home },
   { href: "/courses", label: "Courses", icon: FileText },
   { href: "/materials", label: "Materials", icon: Upload },
+  { href: "/help", label: "Help", icon: HelpCircle },
 ];
 
 export function Header() {

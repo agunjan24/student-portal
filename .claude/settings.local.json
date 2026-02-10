@@ -36,7 +36,13 @@
       "Bash(git -C C:/apps/student-portal status)",
       "Bash(git -C C:/apps/student-portal diff --stat)",
       "Bash(git -C C:/apps/student-portal log --oneline -5)",
-      "Bash(git -C C:/apps/student-portal add prisma/schema.prisma src/ CLAUDE.md PLAN_AugmentWithMACurriculum.md .claude/settings.local.json)"
+      "Bash(git -C C:/apps/student-portal add prisma/schema.prisma src/ CLAUDE.md PLAN_AugmentWithMACurriculum.md .claude/settings.local.json)",
+      "Bash(git -C C:/apps/student-portal commit -m \"$\\(cat <<''EOF''\nRefactor from Quiz-centric to Course>Chapter hierarchy with MA Curriculum integration\n\nReplace the flat Quiz model with a Course > Chapter data hierarchy that mirrors\nhow school content is actually organized. Add MA Mathematics Curriculum Framework\nstandards alignment and AI-powered content augmentation.\n\nKey changes:\n- Schema: Quiz model replaced with Course + Chapter models \\(grade, level, subject\\)\n- Materials now link to chapters with materialType classification\n- AI prompts parameterized by grade/level/course instead of hardcoded \"10th grader\"\n- New curriculum module with MA standards data and AI-based standards matching\n- Content augmentation: supplementary content, gap analysis, vocabulary, formulas\n- Full UI overhaul: course/chapter CRUD pages, standards selector, augmentation viewer\n- ~27 new files, ~12 deleted, ~22 modified\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C C:/apps/student-portal push)",
+      "Bash(cmd //c \"taskkill /PID 8484 /F /T\")",
+      "Bash(git -C C:/apps/student-portal log --oneline -3)",
+      "Bash(git -C C:/apps/student-portal add README.md src/app/help/page.tsx src/components/layout/header.tsx .claude/settings.local.json)",
+      "Bash(git -C C:/apps/student-portal commit -m \"$\\(cat <<''EOF''\nAdd help page, README, and Help nav link\n\n- Help page \\(/help\\) with step-by-step workflow guide, tips, and quick links\n- README.md with setup instructions, tech stack, data model, and project structure\n- Added Help link to header navigation\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }
