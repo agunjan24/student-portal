@@ -12,6 +12,20 @@ Be thorough — capture every problem, formula, and concept. Use proper LaTeX fo
 
 Return ONLY valid JSON, no markdown code fences.`;
 
+export const EXTRACT_TEXT_CONTENT_PROMPT = `You are analyzing math study material provided as text (copy-pasted notes, typed content, etc.). Extract and organize all mathematical content.
+
+Return a JSON object with these fields:
+- "extractedText": A cleaned-up version of the text with proper formatting. Use $...$ for inline LaTeX math and $$...$$ for block/display LaTeX math.
+- "topics": An array of math topics covered (e.g., ["quadratic equations", "factoring", "completing the square"])
+- "documentType": One of "worksheet", "textbook", "notes", "test", "other"
+- "problems": An array of objects with "question" (string) and optionally "answer" (string) for any practice problems found. Use LaTeX notation.
+- "keyFormulas": An array of important formulas found, in LaTeX notation (wrapped in $...$)
+- "confidence": A number 0-1 indicating how confident you are in the extraction
+
+Be thorough — capture every problem, formula, and concept. Use proper LaTeX for all math expressions.
+
+Return ONLY valid JSON, no markdown code fences.`;
+
 export const GENERATE_PROBLEMS_PROMPT = `You are a math tutor creating practice problems for a student preparing for a quiz.
 
 Given the topic and study material context below, generate practice problems with step-by-step solutions.

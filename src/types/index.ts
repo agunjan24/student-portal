@@ -5,6 +5,8 @@ export type CourseLevel = "regular" | "honors" | "AP";
 export type MaterialType = "classNotes" | "quiz" | "homework" | "classwork" | "practiceTest" | "other";
 export type Grade = 9 | 10 | 11 | 12;
 export type AugmentationStatus = "pending" | "processing" | "completed" | "failed";
+export type MaterialSourceType = "file" | "text" | "questions";
+export interface TypedQuestion { question: string; answer?: string }
 
 export interface ExtractionResult {
   extractedText: string;

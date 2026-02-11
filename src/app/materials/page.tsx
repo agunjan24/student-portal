@@ -26,7 +26,7 @@ export default async function MaterialsPage() {
             className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
           >
             <Plus className="w-4 h-4" />
-            Upload
+            Add Material
           </Link>
         </div>
 
@@ -34,8 +34,8 @@ export default async function MaterialsPage() {
           <EmptyState
             icon={Upload}
             title="No materials yet"
-            description="Upload study materials to get started with AI extraction"
-            actionLabel="Upload Material"
+            description="Add study materials (upload files, paste text, or type questions) to get started with AI extraction"
+            actionLabel="Add Material"
             actionHref="/materials/upload"
           />
         ) : (

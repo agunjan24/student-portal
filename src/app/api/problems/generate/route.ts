@@ -5,10 +5,11 @@ import type { Difficulty } from "@/types";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { chapterId, difficulty, count } = body as {
+  const { chapterId, difficulty, count, materialIds } = body as {
     chapterId: string;
     difficulty: Difficulty;
     count: number;
+    materialIds?: string[];
   };
 
   if (!chapterId || !difficulty || !count) {
@@ -18,12 +19,20 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const materialWhere: Record<string, unknown> = {
+    chapterId,
+    status: "completed",
+  };
+  if (materialIds) {
+    materialWhere.id = { in: materialIds };
+  }
+
   const chapter = await prisma.chapter.findUnique({
     where: { id: chapterId },
     include: {
       course: true,
       materials: {
-        where: { status: "completed" },
+        where: materialWhere,
         select: { extractedText: true },
       },
     },
@@ -33,7 +42,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Chapter not found" }, { status: 404 });
   }
 
-  // Combine all extracted material text as context
+  // Combine selected material text as context
   const materialContext = chapter.materials
     .map((m) => m.extractedText)
     .filter(Boolean)

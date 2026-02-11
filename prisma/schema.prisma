@@ -39,10 +39,12 @@ model Chapter {
 
 model Material {
   id                  String   @id @default(cuid())
-  filename            String
-  filepath            String
-  mimeType            String
-  fileSize            Int
+  filename            String?
+  filepath            String?
+  mimeType            String?
+  fileSize            Int?
+  sourceType          String   @default("file") // file | text | questions
+  sourceContent       String?  // raw pasted text or JSON questions array
   materialType        String   @default("other") // classNotes | quiz | homework | classwork | practiceTest | other
   status              String   @default("pending") // pending | processing | completed | failed
   extractedText       String?

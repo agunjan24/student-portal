@@ -146,7 +146,7 @@ export default function HelpPage() {
           <Step
             number={6}
             title="Generate Problems & Study"
-            description={'Navigate to a chapter and click "Generate Problems" to create AI-powered practice questions based on your materials and standards. Then start a study session — choose a difficulty level (Easy, Medium, Hard), answer problems, reveal solutions, and self-report whether you got each one right.'}
+            description={'Navigate to a chapter and click "Study" to open the study launcher. Choose a difficulty level (Easy, Medium, Hard) and number of problems, then click "Generate & Start" — AI generates practice questions and starts your session in one step. For each problem, reveal the solution, then self-report whether you got it right. If you already have generated problems, you can also click "Practice Existing" to study with those.'}
             tips={[
               "Problems are tailored to your grade level and course standards.",
               "Solutions include step-by-step explanations with LaTeX math rendering.",

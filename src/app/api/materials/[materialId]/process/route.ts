@@ -1,6 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { extractContent } from "@/lib/ai/extract-content";
+import {
+  extractContentFromText,
+  buildExtractionFromQuestions,
+} from "@/lib/ai/extract-content-text";
+import type { ExtractionResult } from "@/types";
+
+async function runExtraction(material: {
+  sourceType: string;
+  filepath: string | null;
+  mimeType: string | null;
+  sourceContent: string | null;
+}): Promise<ExtractionResult> {
+  if (material.sourceType === "questions" && material.sourceContent) {
+    return buildExtractionFromQuestions(material.sourceContent);
+  }
+  if (material.sourceType === "text" && material.sourceContent) {
+    return extractContentFromText(material.sourceContent);
+  }
+  // Default: file-based extraction
+  if (!material.filepath || !material.mimeType) {
+    throw new Error("File path and MIME type are required for file extraction");
+  }
+  return extractContent(material.filepath, material.mimeType);
+}
 
 export async function POST(
   _request: NextRequest,
@@ -22,7 +46,7 @@ export async function POST(
   });
 
   try {
-    const result = await extractContent(material.filepath, material.mimeType);
+    const result = await runExtraction(material);
 
     await prisma.material.update({
       where: { id: materialId },
@@ -40,7 +64,7 @@ export async function POST(
 
     // Retry once
     try {
-      const result = await extractContent(material.filepath, material.mimeType);
+      const result = await runExtraction(material);
 
       await prisma.material.update({
         where: { id: materialId },

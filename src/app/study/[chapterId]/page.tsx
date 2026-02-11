@@ -16,7 +16,11 @@ export default async function StudyPage({
     include: {
       course: true,
       problems: { orderBy: { createdAt: "desc" } },
-      materials: { where: { status: "completed" }, select: { id: true } },
+      materials: {
+        where: { status: "completed" },
+        select: { id: true, filename: true, materialType: true, sourceType: true },
+        orderBy: { createdAt: "desc" },
+      },
       studySessions: {
         where: { status: "completed" },
         orderBy: { startedAt: "desc" },
@@ -58,7 +62,12 @@ export default async function StudyPage({
           chapterTitle={chapter.title}
           courseId={chapter.courseId}
           problemCount={chapter.problems.length}
-          materialCount={chapter.materials.length}
+          materials={chapter.materials.map((m) => ({
+            id: m.id,
+            filename: m.filename,
+            materialType: m.materialType,
+            sourceType: m.sourceType,
+          }))}
           recentSessions={recentSessions}
         />
       </main>

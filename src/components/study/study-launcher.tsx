@@ -3,18 +3,25 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Brain, Sparkles } from "lucide-react";
+import { Brain, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import { DifficultySelector } from "./difficulty-selector";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
-import { DIFFICULTY_LABELS } from "@/lib/constants";
+import { DIFFICULTY_LABELS, MATERIAL_TYPE_LABELS, SOURCE_TYPE_LABELS } from "@/lib/constants";
 import type { Difficulty } from "@/types";
+
+interface MaterialInfo {
+  id: string;
+  filename: string | null;
+  materialType: string;
+  sourceType: string;
+}
 
 interface StudyLauncherProps {
   chapterId: string;
   chapterTitle: string;
   courseId: string;
   problemCount: number;
-  materialCount: number;
+  materials: MaterialInfo[];
   recentSessions: {
     id: string;
     difficulty: string;
@@ -29,7 +36,7 @@ export function StudyLauncher({
   chapterTitle,
   courseId,
   problemCount,
-  materialCount,
+  materials,
   recentSessions,
 }: StudyLauncherProps) {
   const router = useRouter();
@@ -37,6 +44,30 @@ export function StudyLauncher({
   const [count, setCount] = useState(5);
   const [generating, setGenerating] = useState(false);
   const [starting, setStarting] = useState(false);
+  const [selectedMaterialIds, setSelectedMaterialIds] = useState<Set<string>>(
+    () => new Set(materials.map((m) => m.id))
+  );
+  const [materialsExpanded, setMaterialsExpanded] = useState(false);
+
+  function toggleMaterial(id: string) {
+    setSelectedMaterialIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  function toggleAll() {
+    if (selectedMaterialIds.size === materials.length) {
+      setSelectedMaterialIds(new Set());
+    } else {
+      setSelectedMaterialIds(new Set(materials.map((m) => m.id)));
+    }
+  }
 
   async function handleGenerateAndStart() {
     setGenerating(true);
@@ -44,7 +75,14 @@ export function StudyLauncher({
       const genRes = await fetch("/api/problems/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chapterId, difficulty, count }),
+        body: JSON.stringify({
+          chapterId,
+          difficulty,
+          count,
+          materialIds: selectedMaterialIds.size < materials.length
+            ? Array.from(selectedMaterialIds)
+            : undefined,
+        }),
       });
 
       if (!genRes.ok) {
@@ -139,10 +177,66 @@ export function StudyLauncher({
           </div>
         </div>
 
+        {materials.length > 0 && (
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={() => setMaterialsExpanded(!materialsExpanded)}
+              className="flex items-center gap-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+            >
+              Source Materials
+              <span className="text-xs text-gray-500">
+                ({selectedMaterialIds.size}/{materials.length} selected)
+              </span>
+              {materialsExpanded ? (
+                <ChevronUp className="w-4 h-4" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )}
+            </button>
+            {materialsExpanded && (
+              <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200 space-y-2">
+                <label className="flex items-center gap-2 text-xs text-gray-600 pb-2 border-b border-gray-200 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selectedMaterialIds.size === materials.length}
+                    onChange={toggleAll}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="font-medium">Select All</span>
+                </label>
+                {materials.map((m) => {
+                  const displayName =
+                    m.filename ??
+                    SOURCE_TYPE_LABELS[m.sourceType] ??
+                    "Material";
+                  return (
+                    <label
+                      key={m.id}
+                      className="flex items-center gap-2 text-sm cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedMaterialIds.has(m.id)}
+                        onChange={() => toggleMaterial(m.id)}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="truncate">{displayName}</span>
+                      <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 flex-shrink-0">
+                        {MATERIAL_TYPE_LABELS[m.materialType] || m.materialType}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="flex flex-wrap gap-3 mt-6">
           <button
             onClick={handleGenerateAndStart}
-            disabled={isLoading}
+            disabled={isLoading || (materials.length > 0 && selectedMaterialIds.size === 0)}
             className="px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors inline-flex items-center gap-2"
           >
             {generating ? (
@@ -169,7 +263,7 @@ export function StudyLauncher({
           )}
         </div>
 
-        {materialCount === 0 && (
+        {materials.length === 0 && (
           <p className="text-sm text-amber-600 mt-3">
             No study materials uploaded yet. Problems will be generated based on the topic only.
           </p>

@@ -7,7 +7,8 @@ import { ExtractedContent } from "@/components/materials/extracted-content";
 import { DeleteMaterialButton } from "@/components/materials/delete-material-button";
 import { AugmentationStatus } from "@/components/materials/augmentation-status";
 import { AugmentedContent } from "@/components/materials/augmented-content";
-import { MATERIAL_TYPE_LABELS } from "@/lib/constants";
+import { OriginalContent } from "@/components/materials/original-content";
+import { MATERIAL_TYPE_LABELS, SOURCE_TYPE_LABELS } from "@/lib/constants";
 import { prisma } from "@/lib/db";
 
 export default async function MaterialDetailPage({
@@ -33,7 +34,10 @@ export default async function MaterialDetailPage({
 
   if (!material) notFound();
 
-  const isImage = material.mimeType.startsWith("image/");
+  const sourceType = material.sourceType ?? "file";
+  const isFile = sourceType === "file";
+  const isImage = isFile && material.mimeType?.startsWith("image/");
+  const displayName = material.filename ?? SOURCE_TYPE_LABELS[sourceType] ?? "Material";
 
   let chapterStandards: string[] = [];
   try {
@@ -54,9 +58,16 @@ export default async function MaterialDetailPage({
               <ArrowLeft className="w-3.5 h-3.5" />
               Back to Materials
             </Link>
-            <h1 className="text-2xl font-bold">{material.filename}</h1>
+            <h1 className="text-2xl font-bold">{displayName}</h1>
             <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
-              <span>{(material.fileSize / 1024).toFixed(1)} KB</span>
+              {material.fileSize != null && (
+                <span>{(material.fileSize / 1024).toFixed(1)} KB</span>
+              )}
+              {!isFile && (
+                <span className="text-xs px-1.5 py-0.5 rounded bg-blue-50 text-blue-600">
+                  {SOURCE_TYPE_LABELS[sourceType] || sourceType}
+                </span>
+              )}
               <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">
                 {MATERIAL_TYPE_LABELS[material.materialType] || material.materialType}
               </span>
@@ -70,7 +81,7 @@ export default async function MaterialDetailPage({
               )}
             </div>
           </div>
-          <DeleteMaterialButton materialId={material.id} filename={material.filename} />
+          <DeleteMaterialButton materialId={material.id} filename={displayName} />
         </div>
 
         {/* Processing status */}
@@ -94,29 +105,17 @@ export default async function MaterialDetailPage({
 
         {/* Content: side-by-side on desktop */}
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* Original file */}
+          {/* Original content */}
           <div>
             <h2 className="text-lg font-semibold mb-3">Original</h2>
             <div className="bg-white rounded-lg border border-gray-200 p-4">
-              {isImage ? (
-                <img
-                  src={material.filepath}
-                  alt={material.filename}
-                  className="max-w-full h-auto rounded"
-                />
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <p className="text-sm">PDF preview not available</p>
-                  <a
-                    href={material.filepath}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline text-sm mt-1 inline-block"
-                  >
-                    Open PDF
-                  </a>
-                </div>
-              )}
+              <OriginalContent
+                sourceType={sourceType}
+                sourceContent={material.sourceContent}
+                filepath={material.filepath}
+                filename={material.filename}
+                mimeType={material.mimeType}
+              />
             </div>
           </div>
 

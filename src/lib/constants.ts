@@ -56,6 +56,12 @@ export const DIFFICULTY_COLORS: Record<string, string> = {
   hard: "bg-red-100 text-red-800",
 };
 
+export const SOURCE_TYPE_LABELS: Record<string, string> = {
+  file: "File Upload",
+  text: "Pasted Text",
+  questions: "Typed Questions",
+};
+
 export const MATERIAL_STATUS_COLORS: Record<string, string> = {
   pending: "bg-gray-100 text-gray-800",
   processing: "bg-blue-100 text-blue-800",

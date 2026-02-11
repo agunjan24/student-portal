@@ -36,7 +36,9 @@ export async function DELETE(
     return NextResponse.json({ error: "Material not found" }, { status: 404 });
   }
 
-  await deleteFile(material.id, material.filename);
+  if (material.sourceType === "file" && material.filename) {
+    await deleteFile(material.id, material.filename);
+  }
   await prisma.material.delete({ where: { id: materialId } });
 
   return NextResponse.json({ success: true });

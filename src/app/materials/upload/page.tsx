@@ -1,5 +1,5 @@
 import { Header } from "@/components/layout/header";
-import { UploadForm } from "@/components/materials/upload-form";
+import { CreateMaterialForm } from "@/components/materials/create-material-form";
 import { prisma } from "@/lib/db";
 
 export default async function UploadPage({
@@ -24,8 +24,8 @@ export default async function UploadPage({
     <>
       <Header />
       <main className="max-w-6xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">Upload Material</h1>
-        <UploadForm chapters={formattedChapters} defaultChapterId={chapterId} />
+        <h1 className="text-2xl font-bold mb-6">Add Material</h1>
+        <CreateMaterialForm chapters={formattedChapters} defaultChapterId={chapterId} />
       </main>
     </>
   );
