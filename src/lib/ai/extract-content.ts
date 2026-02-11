@@ -1,3 +1,4 @@
+import Anthropic from "@anthropic-ai/sdk";
 import { anthropic } from "./client";
 import { EXTRACT_CONTENT_PROMPT } from "./prompts";
 import { readFileAsBase64 } from "../upload";
@@ -12,6 +13,25 @@ export async function extractContent(
 ): Promise<ExtractionResult> {
   const base64 = await readFileAsBase64(filepath);
 
+  const fileBlock: Anthropic.Messages.ImageBlockParam | Anthropic.Messages.DocumentBlockParam =
+    mimeType === "application/pdf"
+      ? {
+          type: "document",
+          source: {
+            type: "base64",
+            media_type: "application/pdf",
+            data: base64,
+          },
+        }
+      : {
+          type: "image",
+          source: {
+            type: "base64",
+            media_type: mimeType as ImageMediaType,
+            data: base64,
+          },
+        };
+
   const message = await anthropic.messages.create({
     model: "claude-sonnet-4-5-20250929",
     max_tokens: 4096,
@@ -19,14 +39,7 @@ export async function extractContent(
       {
         role: "user",
         content: [
-          {
-            type: "image",
-            source: {
-              type: "base64",
-              media_type: mimeType as ImageMediaType,
-              data: base64,
-            },
-          },
+          fileBlock,
           {
             type: "text",
             text: EXTRACT_CONTENT_PROMPT,

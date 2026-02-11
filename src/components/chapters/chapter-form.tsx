@@ -3,8 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Sparkles } from "lucide-react";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { StandardsSelector } from "./standards-selector";
+import { StandardsSuggestions } from "./standards-suggestions";
+import type { StandardSuggestion } from "@/lib/curriculum/suggest-standards";
 
 interface ChapterFormProps {
   courseId: string;
@@ -33,6 +36,8 @@ export function ChapterForm({ courseId, courseName, initialData }: ChapterFormPr
   );
   const [standardIds, setStandardIds] = useState<string[]>(initialData?.standardIds ?? []);
   const [loading, setLoading] = useState(false);
+  const [suggestions, setSuggestions] = useState<StandardSuggestion[] | null>(null);
+  const [suggestLoading, setSuggestLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -66,6 +71,34 @@ export function ChapterForm({ courseId, courseName, initialData }: ChapterFormPr
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleSuggestStandards() {
+    if (!title.trim()) {
+      toast.error("Enter a chapter title first");
+      return;
+    }
+    setSuggestLoading(true);
+    try {
+      const res = await fetch("/api/chapters/suggest-standards", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chapterTitle: title, courseName }),
+      });
+      if (!res.ok) throw new Error("Failed to get suggestions");
+      const data = await res.json();
+      setSuggestions(data.suggestions);
+    } catch {
+      toast.error("Failed to suggest standards");
+    } finally {
+      setSuggestLoading(false);
+    }
+  }
+
+  function handleAcceptSuggestions(ids: string[]) {
+    const merged = Array.from(new Set([...standardIds, ...ids]));
+    setStandardIds(merged);
+    setSuggestions(null);
   }
 
   return (
@@ -129,9 +162,34 @@ export function ChapterForm({ courseId, courseName, initialData }: ChapterFormPr
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          MA Standards Alignment
-        </label>
+        <div className="flex items-center justify-between mb-1">
+          <label className="block text-sm font-medium text-gray-700">
+            MA Standards Alignment
+          </label>
+          <button
+            type="button"
+            onClick={handleSuggestStandards}
+            disabled={suggestLoading || !title.trim()}
+            className="px-2.5 py-1 text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-md hover:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors inline-flex items-center gap-1"
+          >
+            {suggestLoading ? (
+              <LoadingSpinner className="w-3 h-3" />
+            ) : (
+              <Sparkles className="w-3 h-3" />
+            )}
+            Suggest Standards
+          </button>
+        </div>
+        {suggestions && (
+          <div className="mb-2">
+            <StandardsSuggestions
+              suggestions={suggestions}
+              alreadySelected={standardIds}
+              onAccept={handleAcceptSuggestions}
+              onDismiss={() => setSuggestions(null)}
+            />
+          </div>
+        )}
         <StandardsSelector
           courseName={courseName}
           selected={standardIds}

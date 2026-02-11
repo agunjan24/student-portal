@@ -25,7 +25,8 @@ export function MathRenderer({ text }: { text: string }) {
     // Check for display math $$...$$
     const displayMatch = remaining.match(/\$\$([\s\S]*?)\$\$/);
     // Check for inline math $...$
-    const inlineMatch = remaining.match(/\$([^\$\n]+?)\$/);
+    // Negative lookahead for digits avoids matching currency like $10,000
+    const inlineMatch = remaining.match(/\$(?!\d)([^\$\n]+?)\$/);
 
     if (!displayMatch && !inlineMatch) {
       parts.push({ type: "text", content: remaining });
