@@ -21,6 +21,7 @@ interface PasteTextFormProps {
 
 export function PasteTextForm({ chapters, defaultChapterId }: PasteTextFormProps) {
   const router = useRouter();
+  const [name, setName] = useState("");
   const [content, setContent] = useState("");
   const [chapterId, setChapterId] = useState(defaultChapterId ?? "");
   const [materialType, setMaterialType] = useState("other");
@@ -41,6 +42,7 @@ export function PasteTextForm({ chapters, defaultChapterId }: PasteTextFormProps
           content: content.trim(),
           chapterId: chapterId || undefined,
           materialType,
+          name: name.trim() || undefined,
         }),
       });
 
@@ -78,6 +80,19 @@ export function PasteTextForm({ chapters, defaultChapterId }: PasteTextFormProps
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5 max-w-lg">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Name (optional)
+        </label>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="e.g., Chapter 5 Notes"
+          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        />
+      </div>
+
       <MathInput
         label="Paste or type your content *"
         value={content}

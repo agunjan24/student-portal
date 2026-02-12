@@ -58,7 +58,7 @@ Return ONLY valid JSON array, no markdown code fences.`;
 
   const message = await anthropic.messages.create({
     model: "claude-sonnet-4-5-20250929",
-    max_tokens: 4096,
+    max_tokens: 16384,
     messages: [
       {
         role: "user",
@@ -77,6 +77,10 @@ ${materialContext || "No study materials provided. Generate standard practice pr
   const textBlock = message.content.find((b) => b.type === "text");
   if (!textBlock || textBlock.type !== "text") {
     throw new Error("No text response from AI");
+  }
+
+  if (message.stop_reason === "max_tokens") {
+    throw new Error("AI response was truncated — try generating fewer problems at a time.");
   }
 
   const problems = JSON.parse(stripCodeFences(textBlock.text)) as GeneratedProblem[];

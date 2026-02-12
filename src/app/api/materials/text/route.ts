@@ -3,11 +3,12 @@ import { prisma } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { sourceType, content, chapterId, materialType } = body as {
+  const { sourceType, content, chapterId, materialType, name } = body as {
     sourceType: "text" | "questions";
     content: string;
     chapterId?: string;
     materialType?: string;
+    name?: string;
   };
 
   if (!sourceType || !content) {
@@ -30,6 +31,7 @@ export async function POST(request: NextRequest) {
       sourceContent: content,
       chapterId: chapterId || null,
       materialType: materialType || "other",
+      filename: name || null,
     },
   });
 

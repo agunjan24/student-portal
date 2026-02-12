@@ -18,7 +18,7 @@ export async function augmentContent(context: AugmentContext): Promise<Augmentat
 
   const message = await anthropic.messages.create({
     model: "claude-sonnet-4-5-20250929",
-    max_tokens: 4096,
+    max_tokens: 16384,
     messages: [
       {
         role: "user",
@@ -30,6 +30,10 @@ export async function augmentContent(context: AugmentContext): Promise<Augmentat
   const textBlock = message.content.find((b) => b.type === "text");
   if (!textBlock || textBlock.type !== "text") {
     throw new Error("No text response from AI");
+  }
+
+  if (message.stop_reason === "max_tokens") {
+    throw new Error("AI response was truncated — content may be too large for augmentation.");
   }
 
   const result = JSON.parse(stripCodeFences(textBlock.text)) as AugmentationResult;

@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Pencil, Upload, Brain, GraduationCap, FileText, ArrowLeft } from "lucide-react";
+import { Pencil, Upload, Brain, GraduationCap, FileText, ArrowLeft, Printer } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { DaysRemaining } from "@/components/shared/days-remaining";
 import { StandardsBadges } from "@/components/chapters/standards-badges";
 import { DeleteChapterButton } from "@/components/chapters/delete-chapter-button";
-import { MATERIAL_TYPE_LABELS } from "@/lib/constants";
+import { MATERIAL_TYPE_LABELS, SOURCE_TYPE_LABELS } from "@/lib/constants";
 import { prisma } from "@/lib/db";
 
 export default async function ChapterDetailPage({
@@ -154,6 +154,15 @@ export default async function ChapterDetailPage({
               Study Now
             </Link>
           )}
+          {chapter._count.problems > 0 && (
+            <Link
+              href={`/courses/${courseId}/chapters/${chapter.id}/print`}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              <Printer className="w-4 h-4" />
+              Print Problems
+            </Link>
+          )}
         </div>
 
         {/* Materials list */}
@@ -168,7 +177,9 @@ export default async function ChapterDetailPage({
                   className="flex items-center justify-between p-3 hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">{material.filename}</span>
+                    <span className="text-sm font-medium">
+                      {material.filename || SOURCE_TYPE_LABELS[material.sourceType] || "Material"}
+                    </span>
                     <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">
                       {MATERIAL_TYPE_LABELS[material.materialType] || material.materialType}
                     </span>
