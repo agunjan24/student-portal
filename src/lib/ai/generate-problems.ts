@@ -1,6 +1,6 @@
 import { anthropic } from "./client";
-import { GENERATE_PROBLEMS_PROMPT } from "./prompts";
-import { stripCodeFences } from "./utils";
+import { GENERATE_PROBLEMS_PROMPT, EXTRACT_EXACT_PROBLEMS_PROMPT } from "./prompts";
+import { stripCodeFences, parseTruncatedJsonArray } from "./utils";
 import type { GeneratedProblem, Difficulty } from "@/types";
 
 export interface CourseContext {
@@ -8,6 +8,7 @@ export interface CourseContext {
   level: string;
   courseName: string;
   chapterTitle: string;
+  subject?: string;
   standardIds?: string[];
 }
 
@@ -28,7 +29,8 @@ export async function generateProblems(
         ? "Honors-level (proofs, extensions, deeper reasoning)"
         : "Regular-level (scaffolded, concept-building)";
 
-    prompt = `You are a math tutor creating practice problems for a Grade ${courseContext.grade} student in ${levelDesc} ${courseContext.courseName}, Chapter: "${courseContext.chapterTitle}".
+    const subject = courseContext.subject || "math";
+    prompt = `You are a ${subject} tutor creating practice problems for a Grade ${courseContext.grade} student in ${levelDesc} ${courseContext.courseName}, Chapter: "${courseContext.chapterTitle}".
 
 ${courseContext.standardIds?.length ? `Aligned to MA Curriculum Framework standards: ${courseContext.standardIds.join(", ")}` : ""}
 
@@ -88,4 +90,66 @@ ${materialContext || "No study materials provided. Generate standard practice pr
     ...p,
     difficulty,
   }));
+}
+
+export async function extractExactProblems(
+  topic: string,
+  materialContext: string,
+  courseContext?: CourseContext
+): Promise<GeneratedProblem[]> {
+  if (!materialContext) {
+    throw new Error("Study materials are required for extracting problems.");
+  }
+
+  let prompt = EXTRACT_EXACT_PROBLEMS_PROMPT;
+
+  if (courseContext) {
+    const subject = courseContext.subject || "math";
+    const levelDesc =
+      courseContext.level === "AP"
+        ? "AP-level (college-level rigor, exam-style problems)"
+        : courseContext.level === "honors"
+        ? "Honors-level (proofs, extensions, deeper reasoning)"
+        : "Regular-level (scaffolded, concept-building)";
+
+    prompt = `You are a ${subject} tutor extracting practice problems from study materials for a Grade ${courseContext.grade} student in ${levelDesc} ${courseContext.courseName}, Chapter: "${courseContext.chapterTitle}".
+
+${courseContext.standardIds?.length ? `Aligned to MA Curriculum Framework standards: ${courseContext.standardIds.join(", ")}` : ""}
+
+${EXTRACT_EXACT_PROBLEMS_PROMPT}
+${courseContext.standardIds?.length ? '\nAlso include "standardId": The most relevant standard ID (e.g., "G-SRT.6") for each problem.' : ""}`;
+  }
+
+  const message = await anthropic.messages.create({
+    model: "claude-sonnet-4-5-20250929",
+    max_tokens: 16384,
+    messages: [
+      {
+        role: "user",
+        content: `${prompt}
+
+Topic/Chapter: ${topic}
+
+Study material content:
+${materialContext}`,
+      },
+    ],
+  });
+
+  const textBlock = message.content.find((b) => b.type === "text");
+  if (!textBlock || textBlock.type !== "text") {
+    throw new Error("No text response from AI");
+  }
+
+  if (message.stop_reason === "max_tokens") {
+    // Try to recover complete problems from the truncated response
+    const recovered = parseTruncatedJsonArray<GeneratedProblem>(textBlock.text);
+    if (recovered && recovered.length > 0) {
+      return recovered;
+    }
+    throw new Error("AI response was truncated and no complete problems could be recovered. Try with fewer materials selected.");
+  }
+
+  const problems = JSON.parse(stripCodeFences(textBlock.text)) as GeneratedProblem[];
+  return problems;
 }

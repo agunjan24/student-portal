@@ -1,20 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { generateProblems } from "@/lib/ai/generate-problems";
+import { generateProblems, extractExactProblems } from "@/lib/ai/generate-problems";
 import type { Difficulty } from "@/types";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { chapterId, difficulty, count, materialIds } = body as {
+  const { chapterId, difficulty, count, materialIds, mode = "generate" } = body as {
     chapterId: string;
     difficulty: Difficulty;
     count: number;
     materialIds?: string[];
+    mode?: "generate" | "extract";
   };
 
-  if (!chapterId || !difficulty || !count) {
+  if (!chapterId || !difficulty || (mode === "generate" && !count)) {
     return NextResponse.json(
-      { error: "chapterId, difficulty, and count are required" },
+      { error: "chapterId and difficulty are required (count required for generate mode)" },
       { status: 400 }
     );
   }
@@ -49,19 +50,18 @@ export async function POST(request: NextRequest) {
     .join("\n\n---\n\n");
 
   try {
-    const generated = await generateProblems(
-      chapter.title,
-      difficulty,
-      count,
-      materialContext,
-      {
-        grade: chapter.course.grade,
-        level: chapter.course.level,
-        courseName: chapter.course.courseName,
-        chapterTitle: chapter.title,
-        standardIds: chapter.standardIds ? JSON.parse(chapter.standardIds) : undefined,
-      }
-    );
+    const courseContext = {
+      grade: chapter.course.grade,
+      level: chapter.course.level,
+      courseName: chapter.course.courseName,
+      chapterTitle: chapter.title,
+      subject: chapter.course.subject,
+      standardIds: chapter.standardIds ? JSON.parse(chapter.standardIds) : undefined,
+    };
+
+    const generated = mode === "extract"
+      ? await extractExactProblems(chapter.title, materialContext, courseContext)
+      : await generateProblems(chapter.title, difficulty, count, materialContext, courseContext);
 
     // Save to database
     const problems = await Promise.all(

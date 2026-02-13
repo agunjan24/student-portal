@@ -1,32 +1,32 @@
-export const EXTRACT_CONTENT_PROMPT = `You are analyzing a math study material (worksheet, textbook page, or notes). Extract all mathematical content from this image.
+export const EXTRACT_CONTENT_PROMPT = `You are analyzing a study material (worksheet, textbook page, or notes). Extract all academic content from this image.
 
 Return a JSON object with these fields:
 - "extractedText": A complete text transcription of the document. Use $...$ for inline LaTeX math and $$...$$ for block/display LaTeX math.
-- "topics": An array of math topics covered (e.g., ["quadratic equations", "factoring", "completing the square"])
+- "topics": An array of topics covered (e.g., ["quadratic equations", "factoring"] or ["chemical bonding", "Lewis structures"])
 - "documentType": One of "worksheet", "textbook", "notes", "test", "other"
 - "problems": An array of objects with "question" (string) and optionally "answer" (string) for any practice problems found. Use LaTeX notation.
 - "keyFormulas": An array of important formulas found, in LaTeX notation (wrapped in $...$)
 - "confidence": A number 0-1 indicating how confident you are in the extraction
 
-Be thorough — capture every problem, formula, and concept. Use proper LaTeX for all math expressions.
+Be thorough — capture every problem, formula, and concept. Use proper LaTeX for all math and scientific expressions (chemical equations, formulas, etc.).
 
 Return ONLY valid JSON, no markdown code fences.`;
 
-export const EXTRACT_TEXT_CONTENT_PROMPT = `You are analyzing math study material provided as text (copy-pasted notes, typed content, etc.). Extract and organize all mathematical content.
+export const EXTRACT_TEXT_CONTENT_PROMPT = `You are analyzing study material provided as text (copy-pasted notes, typed content, etc.). Extract and organize all academic content.
 
 Return a JSON object with these fields:
 - "extractedText": A cleaned-up version of the text with proper formatting. Use $...$ for inline LaTeX math and $$...$$ for block/display LaTeX math.
-- "topics": An array of math topics covered (e.g., ["quadratic equations", "factoring", "completing the square"])
+- "topics": An array of topics covered (e.g., ["quadratic equations", "factoring"] or ["chemical bonding", "Lewis structures"])
 - "documentType": One of "worksheet", "textbook", "notes", "test", "other"
 - "problems": An array of objects with "question" (string) and optionally "answer" (string) for any practice problems found. Use LaTeX notation.
 - "keyFormulas": An array of important formulas found, in LaTeX notation (wrapped in $...$)
 - "confidence": A number 0-1 indicating how confident you are in the extraction
 
-Be thorough — capture every problem, formula, and concept. Use proper LaTeX for all math expressions.
+Be thorough — capture every problem, formula, and concept. Use proper LaTeX for all math and scientific expressions (chemical equations, formulas, etc.).
 
 Return ONLY valid JSON, no markdown code fences.`;
 
-export const GENERATE_PROBLEMS_PROMPT = `You are a math tutor creating practice problems for a student preparing for a quiz.
+export const GENERATE_PROBLEMS_PROMPT = `You are a tutor creating practice problems for a student preparing for a quiz.
 
 Given the topic and study material context below, generate practice problems with step-by-step solutions.
 
@@ -49,7 +49,34 @@ Return a JSON array of objects, each with:
 
 Return ONLY valid JSON array, no markdown code fences.`;
 
-export const GENERATE_SOLUTION_PROMPT = `You are a math tutor providing a detailed solution for a math problem.
+export const EXTRACT_EXACT_PROBLEMS_PROMPT = `You are a tutor extracting practice problems from a student's study materials (quizzes, homework, worksheets, practice tests).
+
+Your job is to find and reproduce EVERY question/problem EXACTLY as written in the materials. Do NOT rephrase, simplify, or create new problems — copy them verbatim.
+
+For each problem found:
+- Reproduce the question text exactly as it appears
+- Provide a clear, concise step-by-step solution (key steps only, avoid excessive explanation)
+- Tag with an appropriate difficulty level (easy, medium, or hard)
+- Tag with a specific topic
+
+Use $...$ for inline math and $$...$$ for display/block math in both questions and solutions.
+
+Difficulty guidelines:
+- Easy: Direct application of a single concept, straightforward computation
+- Medium: Requires combining 2+ concepts or multi-step reasoning
+- Hard: Complex problems requiring deep understanding, word problems, or proofs
+
+Return a JSON array of objects, each with:
+- "questionText": The exact problem statement as written (with LaTeX)
+- "solutionText": Step-by-step solution (with LaTeX)
+- "difficulty": The assessed difficulty level
+- "topic": The specific sub-topic being tested
+
+If no problems are found in the materials, return an empty array [].
+
+Return ONLY valid JSON array, no markdown code fences.`;
+
+export const GENERATE_SOLUTION_PROMPT = `You are a tutor providing a detailed solution for a problem.
 
 Given the problem below, provide a clear, step-by-step solution.
 
@@ -66,8 +93,10 @@ export function generateProblemsPrompt(context: {
   level: string;
   courseName: string;
   chapterTitle: string;
+  subject?: string;
   standardIds?: string[];
 }): string {
+  const subject = context.subject || "math";
   const levelDesc =
     context.level === "AP"
       ? "AP-level (college-level rigor, exam-style problems)"
@@ -75,7 +104,7 @@ export function generateProblemsPrompt(context: {
       ? "Honors-level (proofs, extensions, deeper reasoning)"
       : "Regular-level (scaffolded, concept-building)";
 
-  return `You are a math tutor creating practice problems for a Grade ${context.grade} student in ${levelDesc} ${context.courseName}, Chapter: "${context.chapterTitle}".
+  return `You are a ${subject} tutor creating practice problems for a Grade ${context.grade} student in ${levelDesc} ${context.courseName}, Chapter: "${context.chapterTitle}".
 
 ${context.standardIds?.length ? `Aligned to MA Curriculum Framework standards: ${context.standardIds.join(", ")}` : ""}
 
@@ -108,6 +137,7 @@ export function augmentContentPrompt(context: {
   level: string;
   courseName: string;
   chapterTitle: string;
+  subject?: string;
   standardIds?: string[];
   extractedText: string;
   extractedTopics: string[];
@@ -140,7 +170,7 @@ Analyze the student's material and generate supplementary content to fill gaps b
 
 2. "gapAnalysis": An array of strings describing gaps between the material and curriculum standards. Each string should identify a specific concept or skill that is expected but missing or inadequately covered.
 
-3. "vocabulary": An array of objects with "term" and "definition" for key mathematical vocabulary the student should know for this chapter.
+3. "vocabulary": An array of objects with "term" and "definition" for key vocabulary the student should know for this chapter.
 
 4. "formulas": An array of objects with "formula" (LaTeX string) and "explanation" for key formulas relevant to this chapter.
 

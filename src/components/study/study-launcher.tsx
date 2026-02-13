@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Brain, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import Link from "next/link";
+import { Brain, Sparkles, ChevronDown, ChevronUp, FileSearch } from "lucide-react";
 import { DifficultySelector } from "./difficulty-selector";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { DIFFICULTY_LABELS, MATERIAL_TYPE_LABELS, SOURCE_TYPE_LABELS } from "@/lib/constants";
@@ -24,9 +25,12 @@ interface StudyLauncherProps {
   materials: MaterialInfo[];
   recentSessions: {
     id: string;
+    name: string | null;
+    status: string;
     difficulty: string;
     correctCount: number;
     incorrectCount: number;
+    totalProblems: number;
     startedAt: string;
   }[];
 }
@@ -40,6 +44,7 @@ export function StudyLauncher({
   recentSessions,
 }: StudyLauncherProps) {
   const router = useRouter();
+  const [mode, setMode] = useState<"generate" | "extract">("generate");
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
   const [count, setCount] = useState(5);
   const [generating, setGenerating] = useState(false);
@@ -78,7 +83,8 @@ export function StudyLauncher({
         body: JSON.stringify({
           chapterId,
           difficulty,
-          count,
+          ...(mode === "generate" ? { count } : {}),
+          mode,
           materialIds: selectedMaterialIds.size < materials.length
             ? Array.from(selectedMaterialIds)
             : undefined,
@@ -87,11 +93,15 @@ export function StudyLauncher({
 
       if (!genRes.ok) {
         const data = await genRes.json();
-        throw new Error(data.error || "Failed to generate problems");
+        throw new Error(data.error || `Failed to ${mode === "extract" ? "extract" : "generate"} problems`);
       }
 
       const problems = await genRes.json();
-      toast.success(`Generated ${problems.length} problems`);
+      if (problems.length === 0) {
+        toast.error("No problems found in the selected materials.");
+        return;
+      }
+      toast.success(`${mode === "extract" ? "Extracted" : "Generated"} ${problems.length} problems`);
 
       await startSession(problems.map((p: { id: string }) => p.id));
     } catch (error) {
@@ -153,28 +163,73 @@ export function StudyLauncher({
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
+              Mode
+            </label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setMode("generate")}
+                className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${
+                  mode === "generate"
+                    ? "bg-blue-50 border-blue-300 text-blue-700"
+                    : "bg-white border-gray-300 text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Generate New
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("extract")}
+                disabled={materials.length === 0}
+                className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${
+                  mode === "extract"
+                    ? "bg-blue-50 border-blue-300 text-blue-700"
+                    : "bg-white border-gray-300 text-gray-600 hover:bg-gray-50"
+                } disabled:opacity-40 disabled:cursor-not-allowed`}
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  <FileSearch className="w-3.5 h-3.5" />
+                  Extract from Materials
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Difficulty
             </label>
             <DifficultySelector value={difficulty} onChange={setDifficulty} />
           </div>
 
-          <div>
-            <label htmlFor="count" className="block text-sm font-medium text-gray-700 mb-1">
-              Number of Problems
-            </label>
-            <select
-              id="count"
-              value={count}
-              onChange={(e) => setCount(Number(e.target.value))}
-              className="w-full max-w-xs px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              {[3, 5, 10, 15, 20].map((n) => (
-                <option key={n} value={n}>
-                  {n} problems
-                </option>
-              ))}
-            </select>
-          </div>
+          {mode === "generate" && (
+            <div>
+              <label htmlFor="count" className="block text-sm font-medium text-gray-700 mb-1">
+                Number of Problems
+              </label>
+              <select
+                id="count"
+                value={count}
+                onChange={(e) => setCount(Number(e.target.value))}
+                className="w-full max-w-xs px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                {[3, 5, 10, 15, 20].map((n) => (
+                  <option key={n} value={n}>
+                    {n} problems
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {mode === "extract" && (
+            <p className="text-sm text-gray-500">
+              All problems found in the selected materials will be extracted.
+            </p>
+          )}
         </div>
 
         {materials.length > 0 && (
@@ -236,15 +291,19 @@ export function StudyLauncher({
         <div className="flex flex-wrap gap-3 mt-6">
           <button
             onClick={handleGenerateAndStart}
-            disabled={isLoading || (materials.length > 0 && selectedMaterialIds.size === 0)}
+            disabled={isLoading || (materials.length > 0 && selectedMaterialIds.size === 0) || (mode === "extract" && materials.length === 0)}
             className="px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors inline-flex items-center gap-2"
           >
             {generating ? (
               <LoadingSpinner className="w-4 h-4" />
+            ) : mode === "extract" ? (
+              <FileSearch className="w-4 h-4" />
             ) : (
               <Sparkles className="w-4 h-4" />
             )}
-            {generating ? "Generating..." : "Generate & Start"}
+            {generating
+              ? mode === "extract" ? "Extracting..." : "Generating..."
+              : mode === "extract" ? "Extract & Start" : "Generate & Start"}
           </button>
 
           {problemCount > 0 && (
@@ -278,21 +337,38 @@ export function StudyLauncher({
               const total = session.correctCount + session.incorrectCount;
               const accuracy = total > 0 ? Math.round((session.correctCount / total) * 100) : 0;
               return (
-                <div key={session.id} className="flex items-center justify-between py-2.5">
+                <Link
+                  key={session.id}
+                  href={`/study/${chapterId}/session?sessionId=${session.id}`}
+                  className="flex items-center justify-between py-2.5 hover:bg-gray-50 px-2 -mx-2 rounded transition-colors"
+                >
                   <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium capitalize">
-                      {DIFFICULTY_LABELS[session.difficulty] || session.difficulty}
-                    </span>
+                    {session.name ? (
+                      <span className="text-sm font-medium">{session.name}</span>
+                    ) : (
+                      <span className="text-sm font-medium capitalize">
+                        {DIFFICULTY_LABELS[session.difficulty] || session.difficulty}
+                      </span>
+                    )}
+                    {session.status === "active" && (
+                      <span className="text-xs px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">In progress</span>
+                    )}
                     <span className="text-xs text-gray-400">
                       {new Date(session.startedAt).toLocaleDateString()}
                     </span>
                   </div>
                   <div className="text-sm">
-                    <span className="text-green-600 font-medium">{session.correctCount}</span>
-                    <span className="text-gray-400">/{total}</span>
-                    <span className="text-gray-500 ml-1">({accuracy}%)</span>
+                    {session.status === "completed" ? (
+                      <>
+                        <span className="text-green-600 font-medium">{session.correctCount}</span>
+                        <span className="text-gray-400">/{total}</span>
+                        <span className="text-gray-500 ml-1">({accuracy}%)</span>
+                      </>
+                    ) : (
+                      <span className="text-gray-500">{session.totalProblems} problems</span>
+                    )}
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>
