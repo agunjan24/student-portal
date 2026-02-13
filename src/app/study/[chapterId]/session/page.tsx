@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useSearchParams } from "next/navigation";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { ProblemDisplay } from "@/components/study/problem-display";
 import { SolutionReveal } from "@/components/study/solution-reveal";
@@ -28,6 +29,8 @@ export default function ActiveSessionPage() {
 
   const [problems, setProblems] = useState<Problem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [furthestIndex, setFurthestIndex] = useState(0);
+  const [answeredIndices, setAnsweredIndices] = useState<Set<number>>(new Set());
   const [solutionRevealed, setSolutionRevealed] = useState(false);
   const [correct, setCorrect] = useState(0);
   const [incorrect, setIncorrect] = useState(0);
@@ -92,6 +95,8 @@ export default function ActiveSessionPage() {
           }),
         });
 
+        setAnsweredIndices((prev) => new Set(prev).add(currentIndex));
+
         if (isCorrect) {
           setCorrect((c) => c + 1);
         } else {
@@ -99,7 +104,13 @@ export default function ActiveSessionPage() {
         }
 
         // Move to next problem or complete
-        if (currentIndex + 1 >= problems.length) {
+        const allAnswered = (() => {
+          const updated = new Set(answeredIndices);
+          updated.add(currentIndex);
+          return updated.size >= problems.length;
+        })();
+
+        if (allAnswered) {
           await fetch(`/api/sessions/${sessionId}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -107,9 +118,15 @@ export default function ActiveSessionPage() {
           });
           setCompleted(true);
         } else {
-          setCurrentIndex((i) => i + 1);
-          setSolutionRevealed(false);
-          setStartTime(Date.now());
+          const nextIndex = currentIndex + 1;
+          if (nextIndex < problems.length) {
+            setCurrentIndex(nextIndex);
+            setFurthestIndex((prev) => Math.max(prev, nextIndex));
+            setSolutionRevealed(answeredIndices.has(nextIndex));
+            if (!answeredIndices.has(nextIndex)) {
+              setStartTime(Date.now());
+            }
+          }
         }
       } catch {
         // Silently handle errors
@@ -117,8 +134,33 @@ export default function ActiveSessionPage() {
         setSubmitting(false);
       }
     },
-    [currentIndex, problems, sessionId, startTime, submitting]
+    [currentIndex, problems, sessionId, startTime, submitting, answeredIndices]
   );
+
+  const handlePrevious = useCallback(() => {
+    if (currentIndex > 0) {
+      const prevIndex = currentIndex - 1;
+      setCurrentIndex(prevIndex);
+      setSolutionRevealed(answeredIndices.has(prevIndex));
+    }
+  }, [currentIndex, answeredIndices]);
+
+  const handleNext = useCallback(() => {
+    const nextIndex = currentIndex + 1;
+    if (nextIndex > furthestIndex) {
+      // Skipping to a new unvisited question
+      if (nextIndex < problems.length) {
+        setCurrentIndex(nextIndex);
+        setFurthestIndex(nextIndex);
+        setSolutionRevealed(false);
+        setStartTime(Date.now());
+      }
+    } else {
+      // Navigating forward through already-visited questions
+      setCurrentIndex(nextIndex);
+      setSolutionRevealed(answeredIndices.has(nextIndex));
+    }
+  }, [currentIndex, furthestIndex, answeredIndices, problems.length]);
 
   if (loading) {
     return (
@@ -162,13 +204,16 @@ export default function ActiveSessionPage() {
   }
 
   const currentProblem = problems[currentIndex];
+  const isReviewingAnswered = answeredIndices.has(currentIndex);
+  const canGoPrevious = currentIndex > 0;
+  const canGoNext = currentIndex + 1 < problems.length;
 
   return (
     <>
       <Header />
       <main className="max-w-3xl mx-auto px-4 py-8">
         <SessionProgress
-          current={currentIndex + 1}
+          current={furthestIndex + 1}
           total={problems.length}
           correct={correct}
           incorrect={incorrect}
@@ -183,14 +228,51 @@ export default function ActiveSessionPage() {
             totalProblems={problems.length}
           />
 
-          <SolutionReveal
-            solutionText={currentProblem.solutionText}
-            isRevealed={solutionRevealed}
-            onReveal={() => setSolutionRevealed(true)}
-          />
+          {isReviewingAnswered ? (
+            <SolutionReveal
+              solutionText={currentProblem.solutionText}
+              isRevealed={true}
+              onReveal={() => {}}
+            />
+          ) : (
+            <>
+              <SolutionReveal
+                solutionText={currentProblem.solutionText}
+                isRevealed={solutionRevealed}
+                onReveal={() => setSolutionRevealed(true)}
+              />
 
-          {solutionRevealed && (
-            <SelfReportButtons onReport={handleReport} disabled={submitting} />
+              {solutionRevealed && (
+                <SelfReportButtons onReport={handleReport} disabled={submitting} />
+              )}
+            </>
+          )}
+
+          {(canGoPrevious || canGoNext) && (
+            <div className="flex justify-between items-center mt-6">
+              {canGoPrevious ? (
+                <button
+                  onClick={handlePrevious}
+                  className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Previous
+                </button>
+              ) : (
+                <div />
+              )}
+              {canGoNext ? (
+                <button
+                  onClick={handleNext}
+                  className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              ) : (
+                <div />
+              )}
+            </div>
           )}
         </div>
       </main>
