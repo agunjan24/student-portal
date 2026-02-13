@@ -42,7 +42,22 @@
       "Bash(cmd //c \"taskkill /PID 8484 /F /T\")",
       "Bash(git -C C:/apps/student-portal log --oneline -3)",
       "Bash(git -C C:/apps/student-portal add README.md src/app/help/page.tsx src/components/layout/header.tsx .claude/settings.local.json)",
-      "Bash(git -C C:/apps/student-portal commit -m \"$\\(cat <<''EOF''\nAdd help page, README, and Help nav link\n\n- Help page \\(/help\\) with step-by-step workflow guide, tips, and quick links\n- README.md with setup instructions, tech stack, data model, and project structure\n- Added Help link to header navigation\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git -C C:/apps/student-portal commit -m \"$\\(cat <<''EOF''\nAdd help page, README, and Help nav link\n\n- Help page \\(/help\\) with step-by-step workflow guide, tips, and quick links\n- README.md with setup instructions, tech stack, data model, and project structure\n- Added Help link to header navigation\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(chmod:*)",
+      "Bash(C:/apps/student-portal/scripts/stop.sh)",
+      "Bash(C:/apps/student-portal/scripts/start.sh)",
+      "Bash(netstat:*)",
+      "Bash(git -C C:/apps/student-portal add scripts/start.cmd scripts/stop.cmd scripts/restart.cmd scripts/start.sh scripts/stop.sh scripts/restart.sh)",
+      "Bash(git -C C:/apps/student-portal commit -m \"$\\(cat <<''EOF''\nAdd start/stop/restart scripts for dev server\n\nBatch \\(.cmd\\) and bash \\(.sh\\) scripts with graceful shutdown \\(5s timeout\\)\nand force kill fallback. Cleans stale lock files and orphaned next dev processes.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(C:/apps/student-portal/scripts/backup.sh)",
+      "Bash(powershell -NoProfile -Command \"Add-Type -Assembly System.IO.Compression.FileSystem; [IO.Compression.ZipFile]::OpenRead\\(''C:\\\\apps\\\\student-portal\\\\backups\\\\quiz-prep-backup_20260209_224904.zip''\\).Entries | Select-Object FullName, Length | Format-Table -AutoSize\")",
+      "Bash(git -C C:/apps/student-portal add scripts/backup.cmd scripts/backup.sh .gitignore)",
+      "Bash(git -C C:/apps/student-portal commit -m \"$\\(cat <<''EOF''\nAdd backup script for database, uploads, and env\n\nCreates timestamped zip in backups/ containing prisma/dev.db,\npublic/uploads/, and .env.local. Batch and bash versions.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(if not exist \"C:\\\\apps\\\\student-portal\\\\src\\\\app\\\\api\\\\chapters\\\\suggest-standards\" mkdir \"C:\\\\apps\\\\student-portal\\\\src\\\\app\\\\api\\\\chapters\\\\suggest-standards\")",
+      "Bash(sqlite3:*)",
+      "Bash(.backup.cmd)",
+      "Bash(powershell:*)",
+      "Bash(cd:*)"
     ]
   }
 }

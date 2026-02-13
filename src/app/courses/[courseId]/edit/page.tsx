@@ -24,6 +24,7 @@ export default async function EditCoursePage({
           initialData={{
             id: course.id,
             grade: course.grade,
+            subject: course.subject,
             level: course.level,
             courseName: course.courseName,
           }}

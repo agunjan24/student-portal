@@ -33,7 +33,7 @@ export default function HelpPage() {
                 step: 1,
                 icon: BookOpen,
                 title: "Create a Course",
-                desc: "Set up your math course with grade, level, and name.",
+                desc: "Set up your course with subject, grade, level, and name.",
                 color: "blue",
               },
               {
@@ -94,7 +94,7 @@ export default function HelpPage() {
           <Step
             number={1}
             title="Create a Course"
-            description="Start by creating a course that matches your class. Choose your grade (9-12), course level (Regular, Honors, or AP), and course name (Algebra I, Geometry, Algebra II, or Precalculus)."
+            description="Start by creating a course that matches your class. Choose your subject (Mathematics or Chemistry), grade (9-12), course level (Regular, Honors, or AP), and course name (e.g., Algebra I, Geometry, Chemistry I, AP Chemistry)."
             action={{ label: "Create a Course", href: "/courses/new" }}
           />
 
@@ -103,7 +103,7 @@ export default function HelpPage() {
             title="Add Chapters"
             description="Inside your course, add chapters for each unit or topic. You can set a test date so the dashboard tracks upcoming tests. Select MA Curriculum Framework standards for each chapter — these guide AI problem generation and content augmentation to align with what you need to know."
             tips={[
-              "Standards are grouped by domain (e.g., Algebra, Functions, Geometry).",
+              "Standards are grouped by domain (e.g., Algebra, Functions, Chemical Reactions).",
               "You can select multiple standards per chapter.",
               "Test dates appear on the dashboard so you never miss a test.",
             ]}
@@ -160,8 +160,8 @@ export default function HelpPage() {
           <h2 className="text-lg font-semibold mb-3">How Data is Organized</h2>
           <div className="bg-white rounded-lg border border-gray-200 p-5 text-sm">
             <pre className="text-gray-700 leading-relaxed">
-{`Course (e.g., "Geometry", Grade 10, Honors)
-  └── Chapter (e.g., "Right Triangles & Trigonometry")
+{`Course (e.g., "Geometry", Grade 10, Honors  or  "Chemistry I", Grade 10, Regular)
+  └── Chapter (e.g., "Right Triangles & Trigonometry"  or  "Chemical Reactions")
        ├── Materials  — uploaded class notes, quizzes, homework
        ├── Problems   — AI-generated practice questions
        └── Sessions   — study sessions with self-reported scores`}
@@ -174,14 +174,21 @@ export default function HelpPage() {
           <h2 className="text-lg font-semibold mb-3">MA Curriculum Standards</h2>
           <div className="bg-white rounded-lg border border-gray-200 p-5 space-y-3 text-sm text-gray-600">
             <p>
-              This app includes the Massachusetts Mathematics Curriculum Framework
-              (2017) standards for four courses:
+              This app includes MA Curriculum Framework standards for Mathematics and Chemistry:
             </p>
+            <p className="font-medium text-gray-700">Mathematics (2017 Framework)</p>
             <ul className="list-disc list-inside space-y-1">
               <li>Algebra I — Number &amp; Quantity, Algebra, Functions, Statistics</li>
               <li>Geometry — Congruence, Similarity &amp; Trigonometry, Circles, Coordinate Geometry, Measurement</li>
               <li>Algebra II — Complex Numbers, Polynomials, Rational/Radical Equations, Exponential &amp; Log Functions</li>
               <li>Precalculus — Vectors, Trigonometric Functions, Rational Expressions</li>
+            </ul>
+            <p className="font-medium text-gray-700 mt-2">Chemistry (STE Framework, NGSS-aligned)</p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>Chemistry I — Structure of Matter, Chemical Reactions, Energy in Chemical Processes</li>
+              <li>Honors Chemistry — Nuclear Chemistry, Thermodynamics, Kinetics &amp; Equilibrium</li>
+              <li>Chemistry II — Kinetics, Equilibrium, Acid-Base, Electrochemistry, Thermodynamics</li>
+              <li>AP Chemistry — Atomic Structure, Bonding, Intermolecular Forces, full AP curriculum</li>
             </ul>
             <p>
               When you select standards for a chapter, AI uses them to generate

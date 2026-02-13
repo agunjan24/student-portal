@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { Trophy, Target, RotateCcw, ArrowLeft } from "lucide-react";
+import { Trophy, Target, RotateCcw, ArrowLeft, Tag } from "lucide-react";
 
 interface SessionSummaryProps {
+  sessionId: string;
   chapterId: string;
   chapterTitle: string;
   courseId: string;
@@ -14,6 +16,7 @@ interface SessionSummaryProps {
 }
 
 export function SessionSummary({
+  sessionId,
   chapterId,
   chapterTitle,
   courseId,
@@ -22,6 +25,9 @@ export function SessionSummary({
   total,
   difficulty,
 }: SessionSummaryProps) {
+  const [name, setName] = useState("");
+  const [saved, setSaved] = useState(false);
+
   const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
 
   let emoji: string;
@@ -38,6 +44,20 @@ export function SessionSummary({
   } else {
     emoji = "📚";
     message = "Keep studying! Try reviewing the materials again.";
+  }
+
+  async function saveName() {
+    if (!name.trim()) return;
+    try {
+      await fetch(`/api/sessions/${sessionId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim() }),
+      });
+      setSaved(true);
+    } catch {
+      // Silently handle
+    }
   }
 
   return (
@@ -61,6 +81,36 @@ export function SessionSummary({
         <div className="bg-red-50 rounded-lg p-3">
           <p className="text-2xl font-bold text-red-700">{incorrect}</p>
           <p className="text-xs text-gray-500">Incorrect</p>
+        </div>
+      </div>
+
+      <div className="mb-6">
+        <label htmlFor="session-name" className="flex items-center justify-center gap-1.5 text-sm font-medium text-gray-700 mb-2">
+          <Tag className="w-3.5 h-3.5" />
+          Name this session
+        </label>
+        <div className="flex gap-2">
+          <input
+            id="session-name"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") saveName(); }}
+            placeholder="e.g. Quadratics practice"
+            disabled={saved}
+            className="flex-1 px-3 py-2 text-sm rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
+          />
+          {!saved ? (
+            <button
+              onClick={saveName}
+              disabled={!name.trim()}
+              className="px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            >
+              Save
+            </button>
+          ) : (
+            <span className="px-3 py-2 text-sm text-green-600 font-medium">Saved</span>
+          )}
         </div>
       </div>
 

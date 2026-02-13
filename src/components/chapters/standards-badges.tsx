@@ -1,4 +1,4 @@
-import { getStandardById } from "@/lib/curriculum/ma-standards";
+import { getStandardById } from "@/lib/curriculum/standards";
 
 interface StandardsBadgesProps {
   standardIds: string[];

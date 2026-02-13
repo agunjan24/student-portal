@@ -13,7 +13,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { grade, level, courseName } = body;
+  const { subject, grade, level, courseName } = body;
 
   if (!courseName) {
     return NextResponse.json(
@@ -25,6 +25,7 @@ export async function POST(request: NextRequest) {
   const course = await prisma.course.create({
     data: {
       grade: grade ?? 10,
+      subject: subject ?? "Mathematics",
       level: level ?? "regular",
       courseName,
     },

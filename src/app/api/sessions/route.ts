@@ -24,10 +24,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { chapterId, difficulty, problemIds } = body as {
+  const { chapterId, difficulty, problemIds, name } = body as {
     chapterId: string;
     difficulty: string;
     problemIds: string[];
+    name?: string;
   };
 
   if (!chapterId || !difficulty || !problemIds?.length) {
@@ -42,6 +43,8 @@ export async function POST(request: NextRequest) {
       chapterId,
       difficulty,
       totalProblems: problemIds.length,
+      problemIds: JSON.stringify(problemIds),
+      ...(name && { name }),
     },
   });
 

@@ -5,8 +5,7 @@ set PROJECT_DIR=%~dp0..
 set BACKUP_DIR=%PROJECT_DIR%\backups
 
 :: Create timestamp (YYYYMMDD_HHMMSS)
-for /f "tokens=2 delims==" %%a in ('wmic os get localdatetime /value') do set DT=%%a
-set TIMESTAMP=%DT:~0,4%%DT:~4,2%%DT:~6,2%_%DT:~8,2%%DT:~10,2%%DT:~12,2%
+for /f %%a in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd_HHmmss"') do set TIMESTAMP=%%a
 set ZIP_NAME=quiz-prep-backup_%TIMESTAMP%.zip
 
 echo [Backup] Starting backup...

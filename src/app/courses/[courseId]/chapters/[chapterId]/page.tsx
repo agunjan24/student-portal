@@ -209,9 +209,17 @@ export default async function ChapterDetailPage({
             <h2 className="text-lg font-semibold mb-3">Recent Sessions</h2>
             <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100">
               {chapter.studySessions.map((session) => (
-                <div key={session.id} className="flex items-center justify-between p-3">
+                <Link
+                  key={session.id}
+                  href={`/study/${chapter.id}/session?sessionId=${session.id}`}
+                  className="flex items-center justify-between p-3 hover:bg-gray-50 transition-colors"
+                >
                   <div>
-                    <span className="text-sm font-medium capitalize">{session.difficulty}</span>
+                    {session.name ? (
+                      <span className="text-sm font-medium">{session.name}</span>
+                    ) : (
+                      <span className="text-sm font-medium capitalize">{session.difficulty}</span>
+                    )}
                     <span className="text-xs text-gray-500 ml-2">
                       {new Date(session.startedAt).toLocaleDateString()}
                     </span>
@@ -225,7 +233,7 @@ export default async function ChapterDetailPage({
                       <span className="text-blue-600">In progress</span>
                     )}
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>

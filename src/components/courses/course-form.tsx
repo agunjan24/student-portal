@@ -4,12 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
-import { GRADES, COURSE_LEVELS, COURSE_LEVEL_LABELS, COURSE_NAMES, COURSE_GRADE_MAP } from "@/lib/constants";
+import { GRADES, COURSE_LEVELS, COURSE_LEVEL_LABELS, SUBJECTS, COURSE_NAMES_BY_SUBJECT, COURSE_GRADE_MAP } from "@/lib/constants";
 
 interface CourseFormProps {
   initialData?: {
     id: string;
     grade: number;
+    subject: string;
     level: string;
     courseName: string;
   };
@@ -19,12 +20,13 @@ export function CourseForm({ initialData }: CourseFormProps) {
   const router = useRouter();
   const isEditing = !!initialData;
 
+  const [subject, setSubject] = useState(initialData?.subject ?? "Mathematics");
   const [grade, setGrade] = useState(initialData?.grade ?? 10);
   const [level, setLevel] = useState(initialData?.level ?? "regular");
   const [courseName, setCourseName] = useState(initialData?.courseName ?? "");
   const [loading, setLoading] = useState(false);
 
-  const availableCourses = COURSE_NAMES.filter(
+  const availableCourses = (COURSE_NAMES_BY_SUBJECT[subject] ?? []).filter(
     (name) => COURSE_GRADE_MAP[name]?.includes(grade)
   );
 
@@ -41,7 +43,7 @@ export function CourseForm({ initialData }: CourseFormProps) {
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ grade, level, courseName }),
+        body: JSON.stringify({ subject, grade, level, courseName }),
       });
 
       if (!res.ok) throw new Error("Failed to save course");
@@ -59,6 +61,32 @@ export function CourseForm({ initialData }: CourseFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5 max-w-lg">
+      <div>
+        <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
+          Subject *
+        </label>
+        <select
+          id="subject"
+          value={subject}
+          onChange={(e) => {
+            const newSubject = e.target.value;
+            setSubject(newSubject);
+            // Reset course name when subject changes
+            const subjectCourses = COURSE_NAMES_BY_SUBJECT[newSubject] ?? [];
+            if (!subjectCourses.some((name) => name === courseName && COURSE_GRADE_MAP[name]?.includes(grade))) {
+              setCourseName("");
+            }
+          }}
+          className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+          {SUBJECTS.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div>
         <label htmlFor="grade" className="block text-sm font-medium text-gray-700 mb-1">
           Grade *

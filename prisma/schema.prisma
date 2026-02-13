@@ -75,9 +75,11 @@ model Problem {
 
 model StudySession {
   id             String    @id @default(cuid())
+  name           String?
   status         String    @default("active") // active | completed
   difficulty     String // easy | medium | hard
   totalProblems  Int
+  problemIds     String?   // JSON string array of problem IDs
   correctCount   Int       @default(0)
   incorrectCount Int       @default(0)
   startedAt      DateTime  @default(now())

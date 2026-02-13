@@ -8,6 +8,7 @@ interface AugmentContext {
   level: string;
   courseName: string;
   chapterTitle: string;
+  subject?: string;
   standardIds?: string[];
   extractedText: string;
   extractedTopics: string[];

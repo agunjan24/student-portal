@@ -22,7 +22,6 @@ export default async function StudyPage({
         orderBy: { createdAt: "desc" },
       },
       studySessions: {
-        where: { status: "completed" },
         orderBy: { startedAt: "desc" },
         take: 10,
       },
@@ -33,9 +32,12 @@ export default async function StudyPage({
 
   const recentSessions = chapter.studySessions.map((s) => ({
     id: s.id,
+    name: s.name,
+    status: s.status,
     difficulty: s.difficulty,
     correctCount: s.correctCount,
     incorrectCount: s.incorrectCount,
+    totalProblems: s.totalProblems,
     startedAt: s.startedAt.toISOString(),
   }));
 

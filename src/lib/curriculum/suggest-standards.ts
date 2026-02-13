@@ -1,6 +1,6 @@
 import { anthropic } from "@/lib/ai/client";
 import { stripCodeFences } from "@/lib/ai/utils";
-import { getStandardsForCourse } from "./ma-standards";
+import { getStandardsForCourse } from "./standards";
 
 export interface StandardSuggestion {
   standardId: string;
@@ -25,7 +25,7 @@ export async function suggestStandardsForTitle(
     messages: [
       {
         role: "user",
-        content: `You are a curriculum alignment specialist for the MA Mathematics Curriculum Framework. Given a chapter title from a ${courseName} course, suggest which standards this chapter likely covers.
+        content: `You are a curriculum alignment specialist for the MA Curriculum Framework. Given a chapter title from a ${courseName} course, suggest which standards this chapter likely covers.
 
 ## Standards for ${courseName}:
 ${standardsSummary}

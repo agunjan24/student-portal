@@ -54,6 +54,7 @@ export async function POST(
       level: material.chapter.course.level,
       courseName: material.chapter.course.courseName,
       chapterTitle: material.chapter.title,
+      subject: material.chapter.course.subject,
       standardIds,
       extractedText: material.extractedText || "",
       extractedTopics: topics,

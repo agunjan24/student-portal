@@ -32,13 +32,14 @@ export async function PUT(
 ) {
   const { sessionId } = await params;
   const body = await request.json();
-  const { status } = body;
+  const { status, name } = body;
 
   const session = await prisma.studySession.update({
     where: { id: sessionId },
     data: {
-      status,
+      ...(status && { status }),
       ...(status === "completed" && { completedAt: new Date() }),
+      ...(name !== undefined && { name }),
     },
   });
 

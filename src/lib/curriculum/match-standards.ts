@@ -1,6 +1,6 @@
 import { anthropic } from "@/lib/ai/client";
 import { stripCodeFences } from "@/lib/ai/utils";
-import { getStandardsForCourse } from "./ma-standards";
+import { getStandardsForCourse } from "./standards";
 
 export interface StandardMatch {
   standardId: string;
@@ -26,7 +26,7 @@ export async function matchStandards(
     messages: [
       {
         role: "user",
-        content: `You are a curriculum alignment specialist. Given extracted content from a student's study material and a list of MA Mathematics Curriculum Framework standards, identify which standards are covered by this material.
+        content: `You are a curriculum alignment specialist. Given extracted content from a student's study material and a list of MA Curriculum Framework standards, identify which standards are covered by this material.
 
 ## Standards for ${courseName}:
 ${standardsSummary}

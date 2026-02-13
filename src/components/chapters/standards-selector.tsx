@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, X } from "lucide-react";
-import { getDomainsForCourse, type Standard } from "@/lib/curriculum/ma-standards";
+import { getDomainsForCourse, type Standard } from "@/lib/curriculum/standards";
 
 interface StandardsSelectorProps {
   courseName: string;

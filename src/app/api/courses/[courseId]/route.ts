@@ -34,11 +34,12 @@ export async function PUT(
 ) {
   const { courseId } = await params;
   const body = await request.json();
-  const { grade, level, courseName } = body;
+  const { subject, grade, level, courseName } = body;
 
   const course = await prisma.course.update({
     where: { id: courseId },
     data: {
+      ...(subject !== undefined && { subject }),
       ...(grade !== undefined && { grade }),
       ...(level !== undefined && { level }),
       ...(courseName !== undefined && { courseName }),

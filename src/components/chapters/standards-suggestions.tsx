@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Check, X } from "lucide-react";
 import type { StandardSuggestion } from "@/lib/curriculum/suggest-standards";
-import { getStandardById } from "@/lib/curriculum/ma-standards";
+import { getStandardById } from "@/lib/curriculum/standards";
 
 interface StandardsSuggestionsProps {
   suggestions: StandardSuggestion[];

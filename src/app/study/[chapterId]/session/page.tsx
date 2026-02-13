@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import Link from "next/link";
+import { ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { ProblemDisplay } from "@/components/study/problem-display";
 import { SolutionReveal } from "@/components/study/solution-reveal";
@@ -10,6 +11,7 @@ import { SelfReportButtons } from "@/components/study/self-report-buttons";
 import { SessionProgress } from "@/components/study/session-progress";
 import { SessionSummary } from "@/components/study/session-summary";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
+import { DIFFICULTY_LABELS } from "@/lib/constants";
 
 interface Problem {
   id: string;
@@ -17,6 +19,15 @@ interface Problem {
   solutionText: string;
   difficulty: string;
   topic: string;
+}
+
+interface ReviewSessionInfo {
+  name: string | null;
+  difficulty: string;
+  correctCount: number;
+  incorrectCount: number;
+  totalProblems: number;
+  startedAt: string;
 }
 
 export default function ActiveSessionPage() {
@@ -41,28 +52,74 @@ export default function ActiveSessionPage() {
   const [courseId, setCourseId] = useState("");
   const [difficulty, setDifficulty] = useState("");
   const [startTime, setStartTime] = useState<number>(Date.now());
+  const [reviewMode, setReviewMode] = useState(false);
+  const [reviewSessionInfo, setReviewSessionInfo] = useState<ReviewSessionInfo | null>(null);
 
   useEffect(() => {
     async function loadProblems() {
       try {
-        const loaded: Problem[] = [];
-        for (const id of problemIds) {
-          const res = await fetch(`/api/problems/${id}`);
-          if (res.ok) {
-            loaded.push(await res.json());
-          }
-        }
-        setProblems(loaded);
+        const isReview = problemIds.length === 0;
 
-        // Get session info (includes chapter context)
+        // Always fetch session info
         const sessionRes = await fetch(`/api/sessions/${sessionId}`);
-        if (sessionRes.ok) {
-          const session = await sessionRes.json();
-          setDifficulty(session.difficulty);
-          if (session.chapter) {
-            setChapterTitle(session.chapter.title);
-            setCourseId(session.chapter.courseId);
+        if (!sessionRes.ok) {
+          setLoading(false);
+          return;
+        }
+        const session = await sessionRes.json();
+        setDifficulty(session.difficulty);
+        if (session.chapter) {
+          setChapterTitle(session.chapter.title);
+          setCourseId(session.chapter.courseId);
+        }
+
+        if (isReview) {
+          // Review mode: load problems from stored problemIds first, fall back to responses
+          let reviewProblems: Problem[] = [];
+
+          const storedIds: string[] = session.problemIds
+            ? JSON.parse(session.problemIds)
+            : [];
+
+          if (storedIds.length > 0) {
+            // Load each problem by ID (covers in-progress sessions with no responses)
+            for (const id of storedIds) {
+              const res = await fetch(`/api/problems/${id}`);
+              if (res.ok) {
+                reviewProblems.push(await res.json());
+              }
+            }
+          } else {
+            // Legacy sessions without stored problemIds — use responses
+            reviewProblems = session.responses.map(
+              (r: { problem: Problem }) => r.problem
+            );
           }
+
+          setProblems(reviewProblems);
+          setReviewMode(true);
+          setReviewSessionInfo({
+            name: session.name,
+            difficulty: session.difficulty,
+            correctCount: session.correctCount,
+            incorrectCount: session.incorrectCount,
+            totalProblems: session.totalProblems,
+            startedAt: session.startedAt,
+          });
+          // Mark all as answered, all solutions viewable
+          setAnsweredIndices(new Set(reviewProblems.map((_: Problem, i: number) => i)));
+          setFurthestIndex(Math.max(0, reviewProblems.length - 1));
+          setSolutionRevealed(true);
+        } else {
+          // Normal mode: load problems by IDs
+          const loaded: Problem[] = [];
+          for (const id of problemIds) {
+            const res = await fetch(`/api/problems/${id}`);
+            if (res.ok) {
+              loaded.push(await res.json());
+            }
+          }
+          setProblems(loaded);
         }
       } catch {
         // Problems will be empty
@@ -141,13 +198,19 @@ export default function ActiveSessionPage() {
     if (currentIndex > 0) {
       const prevIndex = currentIndex - 1;
       setCurrentIndex(prevIndex);
-      setSolutionRevealed(answeredIndices.has(prevIndex));
+      setSolutionRevealed(reviewMode || answeredIndices.has(prevIndex));
     }
-  }, [currentIndex, answeredIndices]);
+  }, [currentIndex, answeredIndices, reviewMode]);
 
   const handleNext = useCallback(() => {
     const nextIndex = currentIndex + 1;
-    if (nextIndex > furthestIndex) {
+    if (reviewMode) {
+      // In review mode, freely navigate
+      if (nextIndex < problems.length) {
+        setCurrentIndex(nextIndex);
+        setSolutionRevealed(true);
+      }
+    } else if (nextIndex > furthestIndex) {
       // Skipping to a new unvisited question
       if (nextIndex < problems.length) {
         setCurrentIndex(nextIndex);
@@ -160,7 +223,7 @@ export default function ActiveSessionPage() {
       setCurrentIndex(nextIndex);
       setSolutionRevealed(answeredIndices.has(nextIndex));
     }
-  }, [currentIndex, furthestIndex, answeredIndices, problems.length]);
+  }, [currentIndex, furthestIndex, answeredIndices, problems.length, reviewMode]);
 
   if (loading) {
     return (
@@ -190,6 +253,7 @@ export default function ActiveSessionPage() {
         <Header />
         <main className="max-w-3xl mx-auto px-4 py-8">
           <SessionSummary
+            sessionId={sessionId}
             chapterId={chapterId}
             chapterTitle={chapterTitle}
             courseId={courseId}
@@ -212,14 +276,39 @@ export default function ActiveSessionPage() {
     <>
       <Header />
       <main className="max-w-3xl mx-auto px-4 py-8">
-        <SessionProgress
-          current={furthestIndex + 1}
-          total={problems.length}
-          correct={correct}
-          incorrect={incorrect}
-        />
+        {reviewMode && reviewSessionInfo && (
+          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Eye className="w-4 h-4 text-blue-600" />
+              <span className="text-sm font-semibold text-blue-900">Review Mode</span>
+            </div>
+            <div className="text-sm text-blue-800">
+              {reviewSessionInfo.name && (
+                <span className="font-medium">{reviewSessionInfo.name} &middot; </span>
+              )}
+              <span className="capitalize">{DIFFICULTY_LABELS[reviewSessionInfo.difficulty] || reviewSessionInfo.difficulty}</span>
+              {" "}&middot; {reviewSessionInfo.correctCount}/{reviewSessionInfo.correctCount + reviewSessionInfo.incorrectCount} correct
+              {" "}&middot; {new Date(reviewSessionInfo.startedAt).toLocaleDateString()}
+            </div>
+            <Link
+              href={`/study/${chapterId}`}
+              className="text-sm text-blue-600 hover:text-blue-800 mt-1 inline-block"
+            >
+              Back to Study
+            </Link>
+          </div>
+        )}
 
-        <div className="mt-6">
+        {!reviewMode && (
+          <SessionProgress
+            current={furthestIndex + 1}
+            total={problems.length}
+            correct={correct}
+            incorrect={incorrect}
+          />
+        )}
+
+        <div className={reviewMode ? "" : "mt-6"}>
           <ProblemDisplay
             questionText={currentProblem.questionText}
             difficulty={currentProblem.difficulty}
@@ -228,7 +317,13 @@ export default function ActiveSessionPage() {
             totalProblems={problems.length}
           />
 
-          {isReviewingAnswered ? (
+          {reviewMode ? (
+            <SolutionReveal
+              solutionText={currentProblem.solutionText}
+              isRevealed={true}
+              onReveal={() => {}}
+            />
+          ) : isReviewingAnswered ? (
             <SolutionReveal
               solutionText={currentProblem.solutionText}
               isRevealed={true}
